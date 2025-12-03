@@ -18,7 +18,7 @@ export interface Procedure {
  */
 export interface ProcedureFieldDefinition {
   /** The type of input control to render */
-  type: 'textbox' | 'number' | 'list';
+  type: 'textbox' | 'number' | 'list' | 'checkbox';
   /** Display label for the field */
   label: string;
   /** Control name identifier for this field (used for data binding) */

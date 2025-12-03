@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ProcedureConfigProvider } from './context/ProcedureConfigContext';
+import { ToastProvider } from './components/Toast';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -12,8 +13,10 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <ProcedureConfigProvider>
-      <App />
-    </ProcedureConfigProvider>
+    <ToastProvider>
+      <ProcedureConfigProvider>
+        <App />
+      </ProcedureConfigProvider>
+    </ToastProvider>
   </React.StrictMode>
 );

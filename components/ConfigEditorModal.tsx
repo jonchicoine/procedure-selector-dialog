@@ -4,6 +4,7 @@ import { SaveIcon } from './icons/SaveIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import { PlusIcon } from './icons/PlusIcon';
 import { useProcedureConfig } from '../context/ProcedureConfigContext';
+import { useToast } from './Toast';
 import { ProcedureDefinition, ProcedureFieldDefinition } from '../types';
 
 interface ConfigEditorModalProps {
@@ -15,6 +16,7 @@ const FIELD_TYPES: Array<{ value: ProcedureFieldDefinition['type']; label: strin
   { value: 'list', label: 'Dropdown List' },
   { value: 'number', label: 'Number Input' },
   { value: 'textbox', label: 'Text Input' },
+  { value: 'checkbox', label: 'Checkbox' },
 ];
 
 const createEmptyField = (): ProcedureFieldDefinition => ({
@@ -43,6 +45,7 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     clearError 
   } = useProcedureConfig();
   
+  const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,11 +88,21 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
         setEditingProcedure(null);
         setHasChanges(false);
         setIsAddingNew(false);
+        showToast(`Configuration imported successfully`, 'success');
       } catch {
-        // Error is handled in context
+        showToast('Failed to import configuration', 'error');
       }
     }
     e.target.value = '';
+  };
+
+  const handleExport = () => {
+    try {
+      exportConfig();
+      showToast('Configuration exported successfully', 'success');
+    } catch {
+      showToast('Failed to export configuration', 'error');
+    }
   };
 
   const handleSelectProcedure = (index: number) => {
@@ -121,15 +134,15 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     
     // Validate required fields
     if (!editingProcedure.description.trim()) {
-      alert('Description is required');
+      showToast('Description is required', 'error');
       return;
     }
     if (!editingProcedure.category.trim()) {
-      alert('Category is required');
+      showToast('Category is required', 'error');
       return;
     }
     if (!editingProcedure.controlName.trim()) {
-      alert('Control Name is required');
+      showToast('Control Name is required', 'error');
       return;
     }
 
@@ -137,15 +150,15 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     for (let i = 0; i < editingProcedure.fields.length; i++) {
       const field = editingProcedure.fields[i];
       if (!field.label.trim()) {
-        alert(`Field ${i + 1}: Label is required`);
+        showToast(`Field ${i + 1}: Label is required`, 'error');
         return;
       }
       if (!field.controlName.trim()) {
-        alert(`Field ${i + 1}: Control Name is required`);
+        showToast(`Field ${i + 1}: Control Name is required`, 'error');
         return;
       }
       if (field.type === 'list' && (!field.listItems || field.listItems.length === 0)) {
-        alert(`Field ${i + 1}: List type requires at least one item`);
+        showToast(`Field ${i + 1}: List type requires at least one item`, 'error');
         return;
       }
     }
@@ -153,8 +166,10 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     if (isAddingNew) {
       addProcedure(editingProcedure);
       setSelectedIndex(procedures.length); // Will be the new index
+      showToast(`Procedure "${editingProcedure.description}" added`, 'success');
     } else if (selectedIndex !== null) {
       updateProcedure(selectedIndex, editingProcedure);
+      showToast(`Procedure "${editingProcedure.description}" saved`, 'success');
     }
     
     setHasChanges(false);
@@ -163,13 +178,15 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
 
   const handleDelete = () => {
     if (selectedIndex === null || isAddingNew) return;
-    if (!confirm(`Delete "${procedures[selectedIndex].description}"? This cannot be undone.`)) {
+    const procedureName = procedures[selectedIndex].description;
+    if (!confirm(`Delete "${procedureName}"? This cannot be undone.`)) {
       return;
     }
     deleteProcedure(selectedIndex);
     setSelectedIndex(null);
     setEditingProcedure(null);
     setHasChanges(false);
+    showToast(`Procedure "${procedureName}" deleted`, 'success');
   };
 
   const handleDiscard = () => {
@@ -274,7 +291,7 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
               Import
             </button>
             <button
-              onClick={exportConfig}
+              onClick={handleExport}
               className="px-3 py-1.5 text-sm bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors"
             >
               Export

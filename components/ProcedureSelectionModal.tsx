@@ -209,6 +209,35 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           </div>
         );
       
+      case 'checkbox':
+        return (
+          <div key={field.controlName} className="flex items-center gap-3 py-2">
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={value === true || value === 'true'}
+              onClick={() => updateFieldValue(field.controlName, value === 'true' ? 'false' : 'true')}
+              className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
+                value === true || value === 'true'
+                  ? 'bg-cyan-500 border-cyan-500'
+                  : 'bg-slate-900 border-slate-600 hover:border-slate-500'
+              }`}
+            >
+              {(value === true || value === 'true') && (
+                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              )}
+            </button>
+            <label 
+              onClick={() => updateFieldValue(field.controlName, value === 'true' ? 'false' : 'true')}
+              className="text-sm font-medium text-slate-300 cursor-pointer select-none"
+            >
+              {field.label}
+            </label>
+          </div>
+        );
+      
       default:
         return null;
     }

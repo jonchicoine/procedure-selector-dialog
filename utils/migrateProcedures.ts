@@ -90,7 +90,7 @@ export function parseConfigJson(json: string): ProcedureConfig {
       if (!field.type || !field.label || !field.controlName) {
         throw new Error(`Invalid field at procedure ${i}, field ${j}: missing required fields`);
       }
-      if (!['textbox', 'number', 'list'].includes(field.type)) {
+      if (!['textbox', 'number', 'list', 'checkbox'].includes(field.type)) {
         throw new Error(`Invalid field type "${field.type}" at procedure ${i}, field ${j}`);
       }
       if (field.type === 'list' && (!Array.isArray(field.listItems) || field.listItems.length === 0)) {
