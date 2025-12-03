@@ -1341,6 +1341,118 @@
     {
       "category": "FB/ID",
       "subcategory": "Incision And Drainage",
+      "description": "I&D - Finger",
+      "controlName": "Surgical_FBID_IncisionDrainage_Finger_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Complexity",
+          "controlName": "Surgical_FBID_IncisionDrainage_Finger_cbo",
+          "listItems": ["Simple", "Complex"]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "I&D - Pilonidal Cyst",
+      "controlName": "Surgical_FBID_IncisionDrainage_PilonidalCyst_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Complexity",
+          "controlName": "Surgical_FBID_IncisionDrainage_PilonidalCyst_cbo",
+          "listItems": ["Simple", "Complex"]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "I&D - Skin",
+      "controlName": "Surgical_FBID_IncisionDrainage_Skin_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Complexity",
+          "controlName": "Surgical_FBID_IncisionDrainage_Skin_cbo",
+          "listItems": ["Simple", "Complex"]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "I&D - Ear",
+      "controlName": "Surgical_FBID_IncisionDrainage_Ear_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Complexity",
+          "controlName": "Surgical_FBID_IncisionDrainage_Ear_cbo",
+          "listItems": ["Simple", "Complex"]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "I&D - Nasal",
+      "controlName": "Surgical_FBID_IncisionDrainage_Nasal_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Complexity",
+          "controlName": "Surgical_FBID_IncisionDrainage_Nasal_cbo",
+          "listItems": ["Simple", "Complex"]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "I&D - Buttocks",
+      "controlName": "Surgical_FBID_IncisionDrainage_Buttocks_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Complexity",
+          "controlName": "Surgical_FBID_IncisionDrainage_Buttocks_cbo",
+          "listItems": ["Simple", "Complex"]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "I&D - Mouth",
+      "controlName": "Surgical_FBID_IncisionDrainage_Mouth_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Complexity",
+          "controlName": "Surgical_FBID_IncisionDrainage_Mouth_cbo",
+          "listItems": ["Simple", "Complex"]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "I&D - Leg/Ankle",
+      "controlName": "Surgical_FBID_IncisionDrainage_LegAnkle_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Complexity",
+          "controlName": "Surgical_FBID_IncisionDrainage_LegAnkle_cbo",
+          "listItems": ["Simple", "Complex"]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
       "description": "Fluid Collection Image-guided",
       "controlName": "Surgical_FBID_IncisionDrainage_FluidCol_chk",
       "fields": []
