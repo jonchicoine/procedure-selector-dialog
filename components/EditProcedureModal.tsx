@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { SelectedProcedure, PHYSICIANS } from '../App';
+import { SelectedProcedure, ProcedureFieldDefinition } from '../types';
 import { CloseIcon } from './icons/CloseIcon';
+
+// Import PHYSICIANS from a shared location
+export const PHYSICIANS = [
+  'Dr. Alice Smith',
+  'Dr. Bob Johnson',
+  'Dr. Carol White',
+  'Dr. David Green',
+];
 
 interface EditProcedureModalProps {
   isOpen: boolean;
@@ -9,38 +17,111 @@ interface EditProcedureModalProps {
   procedure: SelectedProcedure | null;
 }
 
-const SEDATION_CONTROL_NAME = 'Procedures02_ProceduralSedation_cbo';
-
 export const EditProcedureModal: React.FC<EditProcedureModalProps> = ({ isOpen, onClose, onSave, procedure }) => {
   const [editedDate, setEditedDate] = useState('');
   const [editedPhysician, setEditedPhysician] = useState('');
-  const [editedOption, setEditedOption] = useState<string | undefined>(undefined);
-  const [editedDuration, setEditedDuration] = useState('');
+  const [editedFieldValues, setEditedFieldValues] = useState<Record<string, string | number>>({});
 
   useEffect(() => {
     if (procedure) {
       setEditedDate(procedure.date);
       setEditedPhysician(procedure.physician);
-      setEditedOption(procedure.selectedOption);
-      setEditedDuration(procedure.duration?.toString() ?? '');
+      setEditedFieldValues({ ...procedure.fieldValues });
     } else {
-      // Reset form when modal is closed or procedure is cleared
       setEditedDate('');
       setEditedPhysician('');
-      setEditedOption(undefined);
-      setEditedDuration('');
+      setEditedFieldValues({});
     }
   }, [procedure]);
 
   const handleSave = () => {
     if (procedure) {
+      // Process field values - convert empty strings for numbers
+      const processedValues: Record<string, string | number> = {};
+      procedure.fields.forEach(field => {
+        const value = editedFieldValues[field.controlName];
+        if (field.type === 'number') {
+          const numVal = typeof value === 'string' ? parseInt(value, 10) : value;
+          if (!isNaN(numVal as number)) {
+            processedValues[field.controlName] = numVal;
+          }
+        } else if (value !== undefined && value !== '') {
+          processedValues[field.controlName] = value;
+        }
+      });
+
       onSave({
         ...procedure,
         date: editedDate,
         physician: editedPhysician,
-        selectedOption: editedOption,
-        duration: editedDuration ? parseInt(editedDuration, 10) : undefined,
+        fieldValues: processedValues,
       });
+    }
+  };
+
+  const updateFieldValue = (controlName: string, value: string | number) => {
+    setEditedFieldValues(prev => ({ ...prev, [controlName]: value }));
+  };
+
+  const renderFieldInput = (field: ProcedureFieldDefinition) => {
+    const value = editedFieldValues[field.controlName] ?? '';
+    
+    switch (field.type) {
+      case 'list':
+        return (
+          <div key={field.controlName}>
+            <label htmlFor={`edit-field-${field.controlName}`} className="block text-sm font-medium text-slate-400 mb-2">
+              {field.label}
+            </label>
+            <select
+              id={`edit-field-${field.controlName}`}
+              value={value as string}
+              onChange={(e) => updateFieldValue(field.controlName, e.target.value)}
+              className="bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 w-full text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+            >
+              {field.listItems?.map(item => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+        );
+      
+      case 'number':
+        return (
+          <div key={field.controlName}>
+            <label htmlFor={`edit-field-${field.controlName}`} className="block text-sm font-medium text-slate-400 mb-2">
+              {field.label}
+            </label>
+            <input
+              id={`edit-field-${field.controlName}`}
+              type="number"
+              value={value}
+              onChange={(e) => updateFieldValue(field.controlName, e.target.value)}
+              placeholder="Enter a number"
+              className="bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 w-full text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+            />
+          </div>
+        );
+      
+      case 'textbox':
+        return (
+          <div key={field.controlName}>
+            <label htmlFor={`edit-field-${field.controlName}`} className="block text-sm font-medium text-slate-400 mb-2">
+              {field.label}
+            </label>
+            <input
+              id={`edit-field-${field.controlName}`}
+              type="text"
+              value={value as string}
+              onChange={(e) => updateFieldValue(field.controlName, e.target.value)}
+              placeholder="Enter text"
+              className="bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 w-full text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+            />
+          </div>
+        );
+      
+      default:
+        return null;
     }
   };
   
@@ -63,8 +144,6 @@ export const EditProcedureModal: React.FC<EditProcedureModalProps> = ({ isOpen, 
   if (!isOpen || !procedure) {
     return null;
   }
-  
-  const isSedationProcedure = procedure.controlName === SEDATION_CONTROL_NAME;
 
   return (
     <div
@@ -75,7 +154,7 @@ export const EditProcedureModal: React.FC<EditProcedureModalProps> = ({ isOpen, 
       aria-labelledby="edit-dialog-title"
     >
       <div
-        className="bg-slate-800 text-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col border border-slate-700 animate-slide-up"
+        className="bg-slate-800 text-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col border border-slate-700 animate-slide-up max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="p-4 border-b border-slate-700 flex justify-between items-center flex-shrink-0">
@@ -90,7 +169,7 @@ export const EditProcedureModal: React.FC<EditProcedureModalProps> = ({ isOpen, 
           </button>
         </header>
 
-        <main className="p-6 space-y-6">
+        <main className="p-6 space-y-6 overflow-y-auto">
           <div>
             <label htmlFor="edit-procedure-date" className="block text-sm font-medium text-slate-400 mb-2">Date</label>
             <input 
@@ -113,32 +192,7 @@ export const EditProcedureModal: React.FC<EditProcedureModalProps> = ({ isOpen, 
               {PHYSICIANS.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
-          {procedure.options && procedure.options.length > 0 && (
-            <div>
-              <label htmlFor="edit-option-select" className="block text-sm font-medium text-slate-400 mb-2">Option</label>
-              <select 
-                id="edit-option-select"
-                value={editedOption || ''}
-                onChange={(e) => setEditedOption(e.target.value)}
-                className="bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 w-full text-white focus:ring-2 focus:ring-cyan-500 outline-none"
-              >
-                {procedure.options.map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-          )}
-          {isSedationProcedure && (
-            <div>
-              <label htmlFor="edit-sedation-duration" className="block text-sm font-medium text-slate-400 mb-2">Duration (in minutes)</label>
-              <input
-                id="edit-sedation-duration"
-                type="number"
-                value={editedDuration}
-                onChange={(e) => setEditedDuration(e.target.value)}
-                placeholder="e.g., 30"
-                className="bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 w-full text-white focus:ring-2 focus:ring-cyan-500 outline-none"
-              />
-            </div>
-          )}
+          {procedure.fields.map(field => renderFieldInput(field))}
         </main>
         
         <footer className="p-4 bg-slate-800/50 border-t border-slate-700 flex justify-end items-center space-x-4">

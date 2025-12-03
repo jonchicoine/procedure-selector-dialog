@@ -1,0 +1,1995 @@
+{
+  "version": "1.0.0",
+  "procedures": [
+    {
+      "category": "Gastrointestinal",
+      "subcategory": "NG Tube",
+      "description": "NG w/lavage",
+      "controlName": "Procedures01_NGWithLavage_chk",
+      "fields": []
+    },
+    {
+      "category": "Gastrointestinal",
+      "subcategory": "NG Tube",
+      "description": "NG w/suction",
+      "controlName": "Procedures01_NGWithSuction_chk",
+      "fields": []
+    },
+    {
+      "category": "Gastrointestinal",
+      "subcategory": "Peritoneal Procedures",
+      "description": "Peritoneal",
+      "controlName": "Procedures01_Peritoneal_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Peritoneal",
+          "controlName": "Procedures01_Peritoneal_cbo",
+          "listItems": [
+            "Paracentesis without imaging",
+            "Paracentesis with imaging",
+            "Peritoneal Lavage"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Gastrointestinal",
+      "subcategory": "G-Tube",
+      "description": "G-tube Reposition",
+      "controlName": "Procedures01_GTubeReposition_chk",
+      "fields": []
+    },
+    {
+      "category": "Gastrointestinal",
+      "subcategory": "G-Tube",
+      "description": "G-tube Replacement",
+      "controlName": "Procedures01_GTubeReplacement_chk",
+      "fields": []
+    },
+    {
+      "category": "Gastrointestinal",
+      "subcategory": "Anoscopy",
+      "description": "Anoscopy",
+      "controlName": "Procedures01_Anoscopy_chk",
+      "fields": []
+    },
+    {
+      "category": "Genitourinary",
+      "subcategory": "Bladder Procedures",
+      "description": "Bladder Scan",
+      "controlName": "Procedures01_BladderScan_chk",
+      "fields": []
+    },
+    {
+      "category": "Genitourinary",
+      "subcategory": "Bladder Procedures",
+      "description": "Irrigation - Bladder",
+      "controlName": "Procedures01_IrrigationBladder_chk",
+      "fields": []
+    },
+    {
+      "category": "Genitourinary",
+      "subcategory": "Foley Catheter",
+      "description": "Foley Catheter Complex",
+      "controlName": "Procedures01_FoleyCatheterComplex_chk",
+      "fields": []
+    },
+    {
+      "category": "Genitourinary",
+      "subcategory": "Foley Catheter",
+      "description": "Foley Catheter Simple",
+      "controlName": "Procedures01_FoleyCatheterSimple_chk",
+      "fields": []
+    },
+    {
+      "category": "Genitourinary",
+      "subcategory": "Cystostomy",
+      "description": "Cystostomy Tube Change",
+      "controlName": "Procedures01_CystostomyTubeChange_chk",
+      "fields": []
+    },
+    {
+      "category": "Genitourinary",
+      "subcategory": "Catheterization",
+      "description": "Catheter - Straight Cath",
+      "controlName": "Procedures01_CatheterStraighCath_chk",
+      "fields": []
+    },
+    {
+      "category": "Genitourinary",
+      "subcategory": "Catheterization",
+      "description": "Cath for UA Straight/Quick",
+      "controlName": "Procedures01_CathForUA_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "Arterial Access",
+      "description": "Arterial Catheterization Insertion",
+      "controlName": "Procedures01_ArterialCat_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "Pacemaker",
+      "description": "Pacer Internal Temporary",
+      "controlName": "Procedures01_PacerInternalTemp_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "PICC Line",
+      "description": "PICC Line >= 5 years",
+      "controlName": "Procedures01_PICCLineGTE5_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "PICC Line",
+      "description": "PICC Line < 5 years",
+      "controlName": "Procedures01_PICCLineLT5_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "Pericardial Procedures",
+      "description": "Pericardiocentesis",
+      "controlName": "Procedures01_Pericardiocentesis_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "Pacemaker",
+      "description": "Pacer External",
+      "controlName": "Procedures01_PacerExternal_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "Vascular Access",
+      "description": "Declot Vascular Device",
+      "controlName": "Procedures01_DeclotVascularDevice_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "Resuscitation",
+      "description": "CPR",
+      "controlName": "Procedures01_CPR_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "Central Line",
+      "description": "Central Line >= 5 years old",
+      "controlName": "Procedures01_CentralLineGTE5_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "Central Line",
+      "description": "Central line < 5 years old",
+      "controlName": "Procedures01_CentralLineLT5_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "Cardioversion",
+      "description": "Cardioversion (Electric)",
+      "controlName": "Procedures01_CardioversionElectric_chk",
+      "fields": []
+    },
+    {
+      "category": "Cardiovascular",
+      "subcategory": "Cardiac Monitoring",
+      "description": "Cardiac Monitor",
+      "controlName": "Procedures01_CardiacMonitor_chk",
+      "fields": []
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Thoracic Procedures",
+      "description": "Chest Tube",
+      "controlName": "Procedures01_ChestTubes_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Chest Tube",
+          "controlName": "Procedures01_ChestTubes_cbo",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Thoracic Procedures",
+      "description": "Thoracentesis",
+      "controlName": "Procedures01_Thoracentesis_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Thoracentesis",
+          "controlName": "Procedures01_Thoracentesis_cbo",
+          "listItems": [
+            "Thoracentesis without imaging guidance",
+            "Thoracentesis without imaging guidance - bilateral",
+            "Thoracentesis with imaging guidance",
+            "Thoracentesis with imaging guidance - bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Thoracic Procedures",
+      "description": "Pleural Drainage",
+      "controlName": "Procedures01_PleuralDrainage_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Pleural Drainage",
+          "controlName": "Procedures01_PleuralDrainage_cbo",
+          "listItems": [
+            "Pleural drainage without imaging guidance",
+            "Pleural drainage without imaging guidance - bilateral",
+            "Pleural drainage with imaging guidance",
+            "Pleural drainage with imaging guidance - bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Non-Invasive Ventilation",
+      "description": "C-Pap",
+      "controlName": "Procedures01_CPap_chk",
+      "fields": []
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Non-Invasive Ventilation",
+      "description": "Bi-Pap",
+      "controlName": "Procedures01_BiPap_chk",
+      "fields": []
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Nebulizer Therapy",
+      "description": "Nebulizer RT",
+      "controlName": "Procedures01_NebulizerRTRepeat_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Nebulizer RT",
+          "controlName": "Procedures01_NebulizerRTRepeat_cbo",
+          "listItems": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Tracheostomy",
+      "description": "Tracheostomy",
+      "controlName": "Procedures01_Tracheostomy_chk",
+      "fields": []
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Nebulizer Therapy",
+      "description": "Nebulizer ED",
+      "controlName": "Procedures01_NebulizerRepeat_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Nebulizer ED",
+          "controlName": "Procedures01_NebulizerRepeat_cbo",
+          "listItems": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Airway Management",
+      "description": "Intubation",
+      "controlName": "Procedures01_Intubation_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Intubation",
+          "controlName": "Procedures01_Intubation_cbo",
+          "listItems": [
+            "EMS",
+            "ED MD",
+            "Anesthesia"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Respiratory Support",
+      "description": "Oxygen Therapy",
+      "controlName": "Procedures01_OxygenTherapy_chk",
+      "fields": []
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Respiratory Support",
+      "description": "End Tidal CO2",
+      "controlName": "Procedures01_EndTidalCO2_chk",
+      "fields": []
+    },
+    {
+      "category": "Pulmonary",
+      "subcategory": "Airway Management",
+      "description": "Cricothyroidotomy",
+      "controlName": "Procedures01_Cricothyroidotomy_chk",
+      "fields": []
+    },
+    {
+      "category": "Nose",
+      "subcategory": "Nasal Packing",
+      "description": "Nasal Pack Posterior Subsequent",
+      "controlName": "Procedures02_NasalPackPosteriorSubseq_chk",
+      "fields": []
+    },
+    {
+      "category": "Nose",
+      "subcategory": "Nasal Packing",
+      "description": "Nasal Pack Posterior Initial",
+      "controlName": "Procedures02_NasalPackPosteriorInitial_chk",
+      "fields": []
+    },
+    {
+      "category": "Nose",
+      "subcategory": "Nasal Packing",
+      "description": "Nasal Pack Anterior",
+      "controlName": "Procedures02_NasalPackAnterior_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Nasal Pack Anterior",
+          "controlName": "Procedures02_NasalPackAnterior_cbo",
+          "listItems": [
+            "Simple-Left",
+            "Simple-Right",
+            "Simple-Bilateral",
+            "Complex-Left",
+            "Complex-Right",
+            "Complex-Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Nose",
+      "subcategory": "Nasal Cautery",
+      "description": "Nasal Cautery",
+      "controlName": "Procedures02_NasalCautery_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Nasal Cautery",
+          "controlName": "Procedures02_NasalCautery_cbo",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Nose",
+      "subcategory": "Nasal Packing",
+      "description": "Nasal Pack - Balloon",
+      "controlName": "Procedures02_NasalPackBalloon_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Nasal Pack - Balloon",
+          "controlName": "Procedures02_NasalPackBalloon_cbo",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Eye",
+      "subcategory": "Foreign Body Removal",
+      "description": "FB Cornea w/o Slit Lamp",
+      "controlName": "Procedures02_FBCorneaWOSlitLamp_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "FB Cornea w/o Slit Lamp",
+          "controlName": "Procedures02_FBCorneaWOSlitLamp_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Eye",
+      "subcategory": "Foreign Body Removal",
+      "description": "FB Cornea w/ Slit Lamp",
+      "controlName": "Procedures02_FBCorneaWithSlitLamp_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "FB Cornea w/ Slit Lamp",
+          "controlName": "Procedures02_FBCorneaWithSlitLamp_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Eye",
+      "subcategory": "Foreign Body Removal",
+      "description": "FB Conjunctiva Superficial",
+      "controlName": "Procedures02_FBConjunctivaSuperficial_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "FB Conjunctiva Superficial",
+          "controlName": "Procedures02_FBConjunctivaSuperficial_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Eye",
+      "subcategory": "Foreign Body Removal",
+      "description": "FB Conjunctiva Embedded",
+      "controlName": "Procedures02_FBConjunctivaEmbedded_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "FB Conjunctiva Embedded",
+          "controlName": "Procedures02_FBConjunctivaEmbedded_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Ear",
+      "subcategory": "Cerumen Removal",
+      "description": "Impacted Cerumen 2",
+      "controlName": "Procedures02_ImpactedCerumen2_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Impacted Cerumen 2",
+          "controlName": "Procedures02_ImpactedCerumen2_cbo",
+          "listItems": [
+            "Removal by Irrigation/Lavage - Left",
+            "Removal by Irrigation/Lavage - Right",
+            "Removal by Irrigation/Lavage - Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Ear",
+      "subcategory": "Cerumen Removal",
+      "description": "Impacted Cerumen 1",
+      "controlName": "Procedures02_ImpactedCerumen1_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Impacted Cerumen 1",
+          "controlName": "Procedures02_ImpactedCerumen1_cbo",
+          "listItems": [
+            "asdfadsf",
+            "Removal by Instrumentation - Left",
+            "Removal by Instrumentation - Right",
+            "Removal by Instrumentation - Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Procedural Sedation",
+      "subcategory": "Sedation Management",
+      "description": "Procedural Sedation",
+      "controlName": "Procedures02_ProceduralSedation_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Procedural Sedation",
+          "controlName": "Procedures02_ProceduralSedation_cbo",
+          "listItems": [
+            "Sedation Only <5 yrs",
+            "Sedation Only >=5 yrs",
+            "Procedure/Sedation <5 yrs",
+            "Procedure/Sedation >=5 yrs"
+          ]
+        },
+        {
+          "type": "number",
+          "label": "Duration (in mins)",
+          "controlName": "Procedures02_ProceduralSedationDuration_txt"
+        }
+      ]
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Options",
+      "controlName": "Procedures02_QI_Option05_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Options",
+      "controlName": "Procedures02_QI_Option04_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Options",
+      "controlName": "Procedures02_QI_Option03_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Options",
+      "controlName": "Procedures02_QI_Option02_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Options",
+      "controlName": "Procedures02_QI_Option01_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Procedure Time Out",
+      "controlName": "Procedures02_ProcedureTimeOut_chk",
+      "fields": []
+    },
+    {
+      "category": "Obstetrics",
+      "subcategory": "Fetal Monitoring",
+      "description": "Fetal Non-Stress Test",
+      "controlName": "Procedures02_FetalNonStressTest_chk",
+      "fields": []
+    },
+    {
+      "category": "Obstetrics",
+      "subcategory": "Delivery",
+      "description": "Vaginal Delivery",
+      "controlName": "Procedures02_VaginalDelivery_chk",
+      "fields": []
+    },
+    {
+      "category": "Obstetrics",
+      "subcategory": "Neonatal Resuscitation",
+      "description": "Newborn Resuscitation",
+      "controlName": "Procedures02_NewbornResuscitation_chk",
+      "fields": []
+    },
+    {
+      "category": "Obstetrics",
+      "subcategory": "Delivery",
+      "description": "Cesarean Section",
+      "controlName": "Procedures02_CesareanSection_chk",
+      "fields": []
+    },
+    {
+      "category": "Special Procedures",
+      "subcategory": "Telehealth",
+      "description": "Telehealth Services",
+      "controlName": "Procedures02_TelehealthServices_chk",
+      "fields": []
+    },
+    {
+      "category": "Neurology",
+      "subcategory": "Spinal Procedures",
+      "description": "Lumbar Puncture",
+      "controlName": "Procedures02_LumbarPuncture_chk",
+      "fields": []
+    },
+    {
+      "category": "Neurology",
+      "subcategory": "Spinal Procedures",
+      "description": "Epidural Blood Patch",
+      "controlName": "Procedures02_EpiduralBloodPatch_chk",
+      "fields": []
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Minor Ortho",
+      "description": "Unna Boot",
+      "controlName": "Orthopedics_UnnaBoot_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Unna Boot",
+          "controlName": "Orthopedics_UnnaBoot_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Immobilization Change",
+      "description": "Cast Changes Simple Immob 1",
+      "controlName": "Orthopedics_CastChangesSimpleImmob1_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Cast Changes Simple Immob 1",
+          "controlName": "Orthopedics_CastChangesSimpleImmob1_cbo",
+          "listItems": [
+            "Arm - Custom Long Splint - 50",
+            "Arm - Custom Long Splint - LT",
+            "Arm - Custom Long Splint - RT",
+            "Arm - Custom Short Splint - 50",
+            "Arm - Custom Short Splint - LT",
+            "Arm - Custom Short Splint - RT",
+            "Arm - Preformed Long Splint - 50",
+            "Arm - Preformed Long Splint - LT",
+            "Arm - Preformed Long Splint - RT",
+            "Arm - Preformed Short Splint - 50",
+            "Arm - Preformed Short Splint - LT",
+            "Arm - Preformed Short Splint - RT",
+            "Elbow/Wrist Strapping - 50",
+            "Elbow/Wrist Strapping - LT",
+            "Elbow/Wrist Strapping - RT",
+            "Leg - Custom Long Splint - 50",
+            "Leg - Custom Long Splint - LT",
+            "Leg - Custom Long Splint - RT",
+            "Leg - Custom Short Splint - 50",
+            "Leg - Custom Short Splint - LT",
+            "Leg - Custom Short Splint - RT",
+            "Leg - Preformed Long Splint - 50",
+            "Leg - Preformed Long Splint - LT",
+            "Leg - Preformed Long Splint - RT",
+            "Leg - Preformed Short Splint - 50",
+            "Leg - Preformed Short Splint - LT",
+            "Leg - Preformed Short Splint - RT",
+            "Shoulder Strapping - 50",
+            "Shoulder Strapping - LT",
+            "Shoulder Strapping - RT"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Cast Application",
+      "description": "Walker - Add to Existing Cast",
+      "controlName": "Orthopedics_WalkerAddToExistingCast_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Walker - Add to Existing Cast",
+          "controlName": "Orthopedics_WalkerAddToExistingCast_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Immobilization Change",
+      "description": "Cast Changes Simple Immob 2",
+      "controlName": "Orthopedics_CastChangesSimpleImmob2_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Cast Changes Simple Immob 2",
+          "controlName": "Orthopedics_CastChangesSimpleImmob2_cbo",
+          "listItems": [
+            "Arm - Custom Long Splint - 50",
+            "Arm - Custom Long Splint - LT",
+            "Arm - Custom Long Splint - RT",
+            "Arm - Custom Short Splint - 50",
+            "Arm - Custom Short Splint - LT",
+            "Arm - Custom Short Splint - RT",
+            "Arm - Preformed Long Splint - 50",
+            "Arm - Preformed Long Splint - LT",
+            "Arm - Preformed Long Splint - RT",
+            "Arm - Preformed Short Splint - 50",
+            "Arm - Preformed Short Splint - LT",
+            "Arm - Preformed Short Splint - RT",
+            "Elbow/Wrist Strapping - 50",
+            "Elbow/Wrist Strapping - LT",
+            "Elbow/Wrist Strapping - RT",
+            "Leg - Custom Long Splint - 50",
+            "Leg - Custom Long Splint - LT",
+            "Leg - Custom Long Splint - RT",
+            "Leg - Custom Short Splint - 50",
+            "Leg - Custom Short Splint - LT",
+            "Leg - Custom Short Splint - RT",
+            "Leg - Preformed Long Splint - 50",
+            "Leg - Preformed Long Splint - LT",
+            "Leg - Preformed Long Splint - RT",
+            "Leg - Preformed Short Splint - 50",
+            "Leg - Preformed Short Splint - LT",
+            "Leg - Preformed Short Splint - RT",
+            "Shoulder Strapping - 50",
+            "Shoulder Strapping - LT",
+            "Shoulder Strapping - RT"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Cast Modification",
+      "description": "Bivalve Long Arm Cast",
+      "controlName": "Orthopedics_BivalveLongArmCast_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Bivalve Long Arm Cast",
+          "controlName": "Orthopedics_BivalveLongArmCast_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Cast Removal",
+      "description": "Remove Long Arm Cast",
+      "controlName": "Orthopedics_RemoveLongArmCast_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Remove Long Arm Cast",
+          "controlName": "Orthopedics_RemoveLongArmCast_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Cast Removal",
+      "description": "Remove Arm Cast Gauntlet",
+      "controlName": "Orthopedics_RemoveArmCastGauntlet_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Remove Arm Cast Gauntlet",
+          "controlName": "Orthopedics_RemoveArmCastGauntlet_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Cast Modification",
+      "description": "Wedge Cast",
+      "controlName": "Orthopedics_WedgeCast_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Wedge Cast",
+          "controlName": "Orthopedics_WedgeCast_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Cast Modification",
+      "description": "Window Cast",
+      "controlName": "Orthopedics_WindowCast_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Window Cast",
+          "controlName": "Orthopedics_WindowCast_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Cast Modification",
+      "description": "Bivalve Leg Cast",
+      "controlName": "Orthopedics_BivalveLegCast_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Bivalve Leg Cast",
+          "controlName": "Orthopedics_BivalveLegCast_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Cast Removal",
+      "description": "Remove Leg Cast",
+      "controlName": "Orthopedics_RemoveLegCast_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Remove Leg Cast",
+          "controlName": "Orthopedics_RemoveLegCast_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Cast Changes",
+      "subcategory": "Cast Modification",
+      "description": "Bivalve Short Arm Cast Gauntlet",
+      "controlName": "Orthopedics_BivalveShortArmCastGauntlet_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Bivalve Short Arm Cast Gauntlet",
+          "controlName": "Orthopedics_BivalveShortArmCastGauntlet_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Options",
+      "controlName": "Orthopedics_QI_Option05_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Options",
+      "controlName": "Orthopedics_QI_Option04_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Options",
+      "controlName": "Orthopedics_QI_Option03_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Options",
+      "controlName": "Orthopedics_QI_Option02_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Options",
+      "controlName": "Orthopedics_QI_Option01_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "General Quality",
+      "description": "Incomplete Ortho Note",
+      "controlName": "Orthopedics_QI_IncompleteOrthoNote_chk",
+      "fields": []
+    },
+    {
+      "category": "Burns",
+      "subcategory": "Escharotomy",
+      "description": "Escharotomy",
+      "controlName": "Surgical_Lacerations_Escharotomy_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Escharotomy",
+          "controlName": "Surgical_Lacerations_Escharotomy_cbo",
+          "listItems": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Burns",
+      "subcategory": "First Degree",
+      "description": "First Degree Local Treatment Initial",
+      "controlName": "Surgical_Lacerations_FirstDegreeLocalTreatmentInitial_chk",
+      "fields": []
+    },
+    {
+      "category": "Burns",
+      "subcategory": "Partial Thickness",
+      "description": "Partial Thickness Whole Face/Extremity",
+      "controlName": "Surgical_Lacerations_PartialThicknessWholeFace_chk",
+      "fields": []
+    },
+    {
+      "category": "Burns",
+      "subcategory": "Partial Thickness",
+      "description": "Partial Thickness Medium 5-10%",
+      "controlName": "Surgical_Lacerations_PartialThicknessMedium510_chk",
+      "fields": []
+    },
+    {
+      "category": "Burns",
+      "subcategory": "Partial Thickness",
+      "description": "Partial Thickness Small < 5%",
+      "controlName": "Surgical_Lacerations_PartialThicknessSmallLT5_chk",
+      "fields": []
+    },
+    {
+      "category": "Burns",
+      "subcategory": "Partial Thickness",
+      "description": "Partial Thickness > 1 Extremity or > 10%",
+      "controlName": "Surgical_Lacerations_PartialThicknessGT1_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "Surgical Quality",
+      "description": "Options",
+      "controlName": "Surgical_QI_Option03_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "Surgical Quality",
+      "description": "Options",
+      "controlName": "Surgical_QI_Option02_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "Surgical Quality",
+      "description": "Options",
+      "controlName": "Surgical_QI_Option01_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "Surgical Quality",
+      "description": "Incompleted FB/ID Note",
+      "controlName": "Surgical_IncompletedFBIDNote_chk",
+      "fields": []
+    },
+    {
+      "category": "Quality Indicators",
+      "subcategory": "Surgical Quality",
+      "description": "Incompleted Laceration Note",
+      "controlName": "Surgical_QI_IncompletedLacerationNote_chk",
+      "fields": []
+    },
+    {
+      "category": "Wound Dehiscence",
+      "subcategory": "Superficial Simple",
+      "description": "Superficial Wound Dehiscence Simple",
+      "controlName": "Surgical_Lacerations_SuperficialWoundDehiscenceSimple_chk",
+      "fields": []
+    },
+    {
+      "category": "Wound Dehiscence",
+      "subcategory": "Complex/Extensive",
+      "description": "Secondary Closure Surgical Wound Complicated/Extensive",
+      "controlName": "Surgical_Lacerations_SecondaryClosureSurgicalWound_chk",
+      "fields": []
+    },
+    {
+      "category": "Wound Dehiscence",
+      "subcategory": "Superficial With Packing",
+      "description": "Superficial Wound Dehiscence With Packing",
+      "controlName": "Surgical_Lacerations_SuperficialWoundDehiscenceWithPacking_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Foreign Body Removal",
+      "description": "Nose",
+      "controlName": "Surgical_FBID_ForeignBodyRemoval_Nose_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Nose",
+          "controlName": "Surgical_FBID_ForeignBodyRemoval_Nose_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Foreign Body Removal",
+      "description": "Ear",
+      "controlName": "Surgical_FBID_ForeignBodyRemoval_Ear_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Ear",
+          "controlName": "Surgical_FBID_ForeignBodyRemoval_Ear_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Foreign Body Removal",
+      "description": "Laryngoscopy",
+      "controlName": "Surgical_FBID_ForeignBodyRemoval_Laryngoscopy_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Laryngoscopy",
+          "controlName": "Surgical_FBID_ForeignBodyRemoval_Laryngoscopy_cbo",
+          "listItems": [
+            "Laryngoscopy indirect - diagnostic",
+            "Laryngoscopy indirect - FB removal",
+            "Laryngoscopy direct - FB removal",
+            "Laryngoscopy flexible - diagnostic",
+            "Laryngoscopy flexible - removal of foreign body(s)"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Foreign Body Removal",
+      "description": "Rectum/Rigid Scope",
+      "controlName": "Surgical_FBID_ForeignBodyRemoval_RectumRigidScope_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Foreign Body Removal",
+      "description": "Rectum/Flexible Scope",
+      "controlName": "Surgical_FBID_ForeignBodyRemoval_RectumFlexibleScope_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Foreign Body Removal",
+      "description": "Vagina",
+      "controlName": "Surgical_FBID_ForeignBodyRemoval_Vagina_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Foreign Body Removal",
+      "description": "Pharynx",
+      "controlName": "Surgical_FBID_ForeignBodyRemoval_Pharynx_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Inject or Aspirate Joints",
+      "description": "Large w/ US guidance",
+      "controlName": "Surgical_FBID_InjectAspirateJoints_Large_Guidance_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Inject or Aspirate Joints",
+      "description": "Small w/ US guidance",
+      "controlName": "Surgical_FBID_InjectAspirateJoints_Small_Guidance_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Inject or Aspirate Joints",
+      "description": "Medium w/ US guidance",
+      "controlName": "Surgical_FBID_InjectAspirateJoints_Medium_Guidance_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Inject or Aspirate Joints",
+      "description": "Large w/out US guidance",
+      "controlName": "Surgical_FBID_InjectAspirateJoints_Large_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Inject or Aspirate Joints",
+      "description": "Small w/out US guidance",
+      "controlName": "Surgical_FBID_InjectAspirateJoints_Small_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Inject or Aspirate Joints",
+      "description": "Medium w/out US guidance",
+      "controlName": "Surgical_FBID_InjectAspirateJoints_Medium_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Inject or Aspirate Joints",
+      "description": "Ganglion Cyst",
+      "controlName": "Surgical_FBID_InjectAspirateJoints_GanglionCyst_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Blocks For Pain",
+      "description": "TMJ/Dental Pain",
+      "controlName": "Surgical_FBID_BlocksForPain_DentalPain_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "TMJ/Dental Pain",
+          "controlName": "Surgical_FBID_BlocksForPain_DentalPain_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Blocks For Pain",
+      "description": "TMJ/Dental Pain",
+      "controlName": "Surgical_FBID_BlocksForPain_TMJJoint_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "TMJ/Dental Pain",
+          "controlName": "Surgical_FBID_BlocksForPain_TMJJoint_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Blocks For Pain",
+      "description": "Digital Block For Pain (not lacerations)",
+      "controlName": "Surgical_FBID_BlocksForPain_DigitialBlock_chk",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Digital Block For Pain (not lacerations)",
+          "controlName": "Surgical_FBID_BlocksForPain_DigitialBlock_chk",
+          "listItems": [
+            "Left",
+            "Right",
+            "Bilateral"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Blocks For Pain",
+      "description": "Muscle",
+      "controlName": "Surgical_FBID_BlocksForPain_Muscle_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Blocks For Pain",
+      "description": "Tendon",
+      "controlName": "Surgical_FBID_BlocksForPain_Tendon_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Nails",
+      "description": "Avulsion of Nail Plate",
+      "controlName": "Surgical_FBID_Nails_AvulsionOfNailPlate_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Avulsion of Nail Plate",
+          "controlName": "Surgical_FBID_Nails_AvulsionOfNailPlate_cbo",
+          "listItems": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Nails",
+      "description": "Debridement of Nails 6 or more",
+      "controlName": "Surgical_FBID_Nails_DebridementOfNails6_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Nails",
+      "description": "Reconstruction of Nail Bed w/Graft",
+      "controlName": "Surgical_FBID_Nails_ReconstructionOfNailBedWithGraft_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Nails",
+      "description": "Trimming of Nails",
+      "controlName": "Surgical_FBID_Nails_TrimmingOfNails_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Nails",
+      "description": "Debridement of Nail 1-5",
+      "controlName": "Surgical_FBID_Nails_DebridementOfNail15_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Nails",
+      "description": "Repair of Nailbed",
+      "controlName": "Surgical_FBID_Nails_RepairOfNailbed_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Nails",
+      "description": "Drain Subungual Hematoma",
+      "controlName": "Surgical_FBID_Nails_DrainSubungualHematoma_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Nails",
+      "description": "Wedge Excision of Skin of Nail Fold",
+      "controlName": "Surgical_FBID_Nails_WedgeResectionToenail_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Nails",
+      "description": "Excision of Nail and Nail Matrix",
+      "controlName": "Surgical_FBID_Nails_ExciseIngrownToenail_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Fluid Collection Image-guided",
+      "controlName": "Surgical_FBID_IncisionDrainage_FluidCol_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Eyelid",
+      "controlName": "Surgical_FBID_IncisionDrainage_Eyelid_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Puncture Aspiration of Abscess",
+      "controlName": "Surgical_FBID_IncisionDrainage_PAA_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Postoperative Wound",
+      "controlName": "Surgical_FBID_IncisionDrainage_IDComplexPostOp_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Palate/Uvula",
+      "controlName": "Surgical_FBID_IncisionDrainage_PalateUvula_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Hematoma/seroma/fluid collection",
+      "controlName": "Surgical_FBID_IncisionDrainage_Hematoma_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "External Auditory Canal",
+      "controlName": "Surgical_FBID_IncisionDrainage_ExteranlAuditory_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Perirectal Abscess",
+      "controlName": "Surgical_FBID_IncisionDrainage_PerirectalAbscess_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Perianal Abscess",
+      "controlName": "Surgical_FBID_IncisionDrainage_PerianalAbscess_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Peritoneal Abscess",
+      "controlName": "Surgical_FBID_IncisionDrainage_PeritonealAbscess_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Vulva/Perineal",
+      "controlName": "Surgical_FBID_IncisionDrainage_VulvaPerineal_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Hemorrhoid",
+      "controlName": "Surgical_FBID_IncisionDrainage_Hemorrhoid_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Scrotum",
+      "controlName": "Surgical_FBID_IncisionDrainage_Scrotum_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Rectum",
+      "controlName": "Surgical_FBID_IncisionDrainage_Rectum_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Dental",
+      "controlName": "Surgical_FBID_IncisionDrainage_Dental_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Peritonsillar",
+      "controlName": "Surgical_FBID_IncisionDrainage_Peritonsilar_chk",
+      "fields": []
+    },
+    {
+      "category": "FB/ID",
+      "subcategory": "Incision And Drainage",
+      "description": "Bartholin Cyst",
+      "controlName": "Surgical_FBID_IncisionDrainage_BartholinCyst_chk",
+      "fields": []
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Unlisted Procedure",
+      "description": "Combo Box Edit 2",
+      "controlName": "ComboBoxEdit2",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Combo Box Edit 2",
+          "controlName": "ComboBoxEdit2",
+          "listItems": [
+            "Reimplant digit exc thumb complete amputation",
+            "Reimplant, thumb",
+            "Metacarpal w/w/o interosseous transfer",
+            "Phalanx w closure any joint",
+            "Phalanx w local flaps any joint",
+            "Foot midtarsal",
+            "Foot transmetatarsal",
+            "Toe Metatarsal",
+            "Toe Metatarsophalangeal joint",
+            "Toe Interphalangeal joint"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Unlisted Procedure",
+      "description": "2)",
+      "controlName": "Surgical_Misc_UnlistedProcedure02_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "2)",
+          "controlName": "Surgical_Misc_UnlistedProcedure02_cbo",
+          "listItems": [
+            "Abdomen",
+            "Casting/Strapping",
+            "Elbow/Humerus",
+            "Forearm/Wrist",
+            "Genitalia Female",
+            "Genitalia Male",
+            "Hand/Finger",
+            "Intestine - Small",
+            "Leg/Ankle",
+            "Penis - Tx priapism injection",
+            "Penis Tx - Irrigation for treatment of priapism",
+            "Pharanx/Adenoids/Tonsil",
+            "Rectum",
+            "Skin,Mucous Membrane,Subcutaneous",
+            "Testis - reduction of torsion",
+            "Trachea/Bronchi",
+            "Vascular Surgery"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Unlisted Procedure",
+      "description": "Combo Box Edit 1",
+      "controlName": "ComboBoxEdit1",
+      "fields": [
+        {
+          "type": "list",
+          "label": "Combo Box Edit 1",
+          "controlName": "ComboBoxEdit1",
+          "listItems": [
+            "Reimplant digit exc thumb complete amputation",
+            "Reimplant, thumb",
+            "Metacarpal w/w/o interosseous transfer",
+            "Phalanx w closure any joint",
+            "Phalanx w local flaps any joint",
+            "Foot midtarsal",
+            "Foot transmetatarsal",
+            "Toe Metatarsal",
+            "Toe Metatarsophalangeal joint",
+            "Toe Interphalangeal joint"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Unlisted Procedure",
+      "description": "1)",
+      "controlName": "Surgical_Misc_UnlistedProcedure01_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "1)",
+          "controlName": "Surgical_Misc_UnlistedProcedure01_cbo",
+          "listItems": [
+            "Abdomen",
+            "Casting/Strapping",
+            "Elbow/Humerus",
+            "Forearm/Wrist",
+            "Genitalia Female",
+            "Genitalia Male",
+            "Hand/Finger",
+            "Intestine - Small",
+            "Leg/Ankle",
+            "Penis - Tx priapism injection",
+            "Penis Tx - Irrigation for treatment of priapism",
+            "Pharanx/Adenoids/Tonsil",
+            "Rectum",
+            "Skin,Mucous Membrane,Subcutaneous",
+            "Testis - reduction of torsion",
+            "Trachea/Bronchi",
+            "Vascular Surgery"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Debridement/Tissue Treatments",
+      "description": "2)",
+      "controlName": "Surgical_Misc_TissueTreatments02_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "2)",
+          "controlName": "Surgical_Misc_TissueTreatments02_cbo",
+          "listItems": [
+            "Debridement - Open wound skin only first 20 sq cm or less",
+            "Debridement - Infected skin 10% BSA",
+            "Debridement - Skin and SC tissue with open fracture",
+            "Debridement - Bone with open fracture",
+            "Debridement - SC tissue first 20 sq cm or less",
+            "Debridement - Muscle and or fascia first 20 sq cm or less",
+            "Debridement - Bone first 20 sq cm or less",
+            "Chemical cautery of tissue",
+            "Scalp/Arm/Leg Tissue Transfer 10.1-30 sq cm",
+            "Forehead/Cheek/Chin/Mouth up to 10 sq cm",
+            "Neck/Axillae/Hand/Feet/Genitalia up to 10 sq cm",
+            "Forehead/Cheek/Chin/Mouth 10.1 - 30 sq cm",
+            "Neck/Axillae/Hand/Feet/Genitalia 10.1 -30 sq cm",
+            "Eyelid/Nose/Ear/Lip up to 10 sq cm",
+            "Eyelid/Nose/Ear/Lip 10.1 - 30 sq cm",
+            "Tissue tx - Any area, 30.1sq cm - 60.0 sq cm",
+            "Tissue tx - Any area, each additional 30.0 sq cm"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Debridement/Tissue Treatments",
+      "description": "1)",
+      "controlName": "Surgical_Misc_TissueTreatments01_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "1)",
+          "controlName": "Surgical_Misc_TissueTreatments01_cbo",
+          "listItems": [
+            "Debridement - Open wound skin only first 20 sq cm or less",
+            "Debridement - Infected skin 10% BSA",
+            "Debridement - Skin and SC tissue with open fracture",
+            "Debridement - Bone with open fracture",
+            "Debridement - SC tissue first 20 sq cm or less",
+            "Debridement - Muscle and or fascia first 20 sq cm or less",
+            "Debridement - Bone first 20 sq cm or less",
+            "Chemical cautery of tissue",
+            "Scalp/Arm/Leg Tissue Transfer 10.1-30 sq cm",
+            "Forehead/Cheek/Chin/Mouth up to 10 sq cm",
+            "Neck/Axillae/Hand/Feet/Genitalia up to 10 sq cm",
+            "Forehead/Cheek/Chin/Mouth 10.1 - 30 sq cm",
+            "Neck/Axillae/Hand/Feet/Genitalia 10.1 -30 sq cm",
+            "Eyelid/Nose/Ear/Lip up to 10 sq cm",
+            "Eyelid/Nose/Ear/Lip 10.1 - 30 sq cm",
+            "Tissue tx - Any area, 30.1sq cm - 60.0 sq cm",
+            "Tissue tx - Any area, each additional 30.0 sq cm"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Tendon Repairs",
+      "description": "2)",
+      "controlName": "Surgical_Misc_TendonRepairs02_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "2)",
+          "controlName": "Surgical_Misc_TendonRepairs02_cbo",
+          "listItems": [
+            "Achilles Tendon Repair",
+            "Digital Flexor Tendon Sheath Repair",
+            "Extensor Tendon (Mallet) Closed Tx Distal",
+            "Extensor Tendon Distal w/o Graft (Mallet)",
+            "Finger Extensor Tendon",
+            "Foot Extensor Tendon Repair",
+            "Foot Flexor Tendon Repair",
+            "Forearm/Wrist Tendon Flexor Repair",
+            "Hand Extensor Tendon",
+            "Infrapatellar Tendon Repair",
+            "Interphalangeal Collateral Ligament Repair",
+            "Metacarpophalengeal Collateral Ligament Repair"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Tendon Repairs",
+      "description": "1)",
+      "controlName": "Surgical_Misc_TendonRepairs01_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "1)",
+          "controlName": "Surgical_Misc_TendonRepairs01_cbo",
+          "listItems": [
+            "Achilles Tendon Repair",
+            "Digital Flexor Tendon Sheath Repair",
+            "Extensor Tendon (Mallet) Closed Tx Distal",
+            "Extensor Tendon Distal w/o Graft (Mallet)",
+            "Finger Extensor Tendon",
+            "Foot Extensor Tendon Repair",
+            "Foot Flexor Tendon Repair",
+            "Forearm/Wrist Tendon Flexor Repair",
+            "Hand Extensor Tendon",
+            "Infrapatellar Tendon Repair",
+            "Interphalangeal Collateral Ligament Repair",
+            "Metacarpophalengeal Collateral Ligament Repair"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Nerve Repairs",
+      "description": "2)",
+      "controlName": "Surgical_Misc_NerveRepairs02_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "2)",
+          "controlName": "Surgical_Misc_NerveRepairs02_cbo",
+          "listItems": [
+            "Hand/Foot Digital Nerve",
+            "Hand/Foot Sensory Nerve",
+            "Ulnar Motor Nerve",
+            "TBD"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Nerve Repairs",
+      "description": "1)",
+      "controlName": "Surgical_Misc_NerveRepairs01_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "1)",
+          "controlName": "Surgical_Misc_NerveRepairs01_cbo",
+          "listItems": [
+            "Hand/Foot Digital Nerve",
+            "Hand/Foot Sensory Nerve",
+            "Ulnar Motor Nerve",
+            "TBD"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Lesions",
+      "description": "2)",
+      "controlName": "Surgical_Misc_Lesions02_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "2)",
+          "controlName": "Surgical_Misc_Lesions02_cbo",
+          "listItems": [
+            "Destruction Benign Cutaneous Lesion Laser < 10 sq cm",
+            "Trunk/Arm/Leg Excision 1.1 - 2 cm",
+            "Trunk/Arm/Leg Excision 2.1 - 3 cm",
+            "Trunk/Arm/Leg Excision 3.1 - 4 cm",
+            "Scalp/Neck/Hand/Feet/Genitalia 1.1 - 2 cm",
+            "Scalp/Neck/Hand/Feet/Genitalia 2.1 - 3 cm",
+            "Scalp/Neck/Hand/Feet/Genitalia 3.1 - 4 cm",
+            "Trunk/Arm/Leg Malignant <.5 cm",
+            "Trunk/Arm/Leg Malignant .6 - 1.0 cm",
+            "Trunk/Arm/Leg Malignant 1.1 -2.0 cm",
+            "Trunk/Arm/Leg Malignant 2.1 - 3.0 cm",
+            "Trunk/Arm/Leg Malignant 3.1- 4.0 cm",
+            "Trunk/Arm/Leg Malignant > 4 cm"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Lesions",
+      "description": "1)",
+      "controlName": "Surgical_Misc_Lesions01_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "1)",
+          "controlName": "Surgical_Misc_Lesions01_cbo",
+          "listItems": [
+            "Destruction Benign Cutaneous Lesion Laser < 10 sq cm",
+            "Trunk/Arm/Leg Excision 1.1 - 2 cm",
+            "Trunk/Arm/Leg Excision 2.1 - 3 cm",
+            "Trunk/Arm/Leg Excision 3.1 - 4 cm",
+            "Scalp/Neck/Hand/Feet/Genitalia 1.1 - 2 cm",
+            "Scalp/Neck/Hand/Feet/Genitalia 2.1 - 3 cm",
+            "Scalp/Neck/Hand/Feet/Genitalia 3.1 - 4 cm",
+            "Trunk/Arm/Leg Malignant <.5 cm",
+            "Trunk/Arm/Leg Malignant .6 - 1.0 cm",
+            "Trunk/Arm/Leg Malignant 1.1 -2.0 cm",
+            "Trunk/Arm/Leg Malignant 2.1 - 3.0 cm",
+            "Trunk/Arm/Leg Malignant 3.1- 4.0 cm",
+            "Trunk/Arm/Leg Malignant > 4 cm"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Grafts",
+      "description": "2)",
+      "controlName": "Surgical_Misc_Grafts02_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "2)",
+          "controlName": "Surgical_Misc_Grafts02_cbo",
+          "listItems": [
+            "Surgical Prep Recipient Site Exc of Wound/Scar",
+            "Full Thickness Graft Scalp/Arm/Leg < 20 cm",
+            "Full Thickness Graft Forehead/Cheek/Chin/Mouth < 20 cm",
+            "Full Thickness Graft Axillae/Hand/Foot/Genitalia < 20 cm",
+            "Muscle Flap Head/Neck",
+            "Graft Composite Full Thickness"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Grafts",
+      "description": "1)",
+      "controlName": "Surgical_Misc_Grafts01_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "1)",
+          "controlName": "Surgical_Misc_Grafts01_cbo",
+          "listItems": [
+            "Surgical Prep Recipient Site Exc of Wound/Scar",
+            "Full Thickness Graft Scalp/Arm/Leg < 20 cm",
+            "Full Thickness Graft Forehead/Cheek/Chin/Mouth < 20 cm",
+            "Full Thickness Graft Axillae/Hand/Foot/Genitalia < 20 cm",
+            "Muscle Flap Head/Neck",
+            "Graft Composite Full Thickness"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Explore Wounds",
+      "description": "2)",
+      "controlName": "Surgical_Misc_ExploreWounds02_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "2)",
+          "controlName": "Surgical_Misc_ExploreWounds02_cbo",
+          "listItems": [
+            "Wound Abd/Flank/Back",
+            "Wound Chest",
+            "Wound Extremity",
+            "Wound Neck",
+            "TBD"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Explore Wounds",
+      "description": "1)",
+      "controlName": "Surgical_Misc_ExploreWounds01_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "1)",
+          "controlName": "Surgical_Misc_ExploreWounds01_cbo",
+          "listItems": [
+            "Wound Abd/Flank/Back",
+            "Wound Chest",
+            "Wound Extremity",
+            "Wound Neck",
+            "TBD"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Dental",
+      "description": "2)",
+      "controlName": "Surgical_Misc_Dental02_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "2)",
+          "controlName": "Surgical_Misc_Dental02_cbo",
+          "listItems": [
+            "Forcep extraction tooth",
+            "May need to add more"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Dental",
+      "description": "1)",
+      "controlName": "Surgical_Misc_Dental01_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "1)",
+          "controlName": "Surgical_Misc_Dental01_cbo",
+          "listItems": [
+            "Forcep extraction tooth",
+            "May need to add more"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Blood Vessel Repair",
+      "description": "2)",
+      "controlName": "Surgical_Misc_BloodVesselRepair02_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "2)",
+          "controlName": "Surgical_Misc_BloodVesselRepair02_cbo",
+          "listItems": [
+            "Finger Blood Vessel",
+            "Hand Blood Vessel",
+            "Ligation Major Artery Extremity Trauma",
+            "Ligation Temporal Artery",
+            "Lower Extremity Blood Vessel",
+            "Upper Extremity Blood Vessel"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Blood Vessel Repair",
+      "description": "1)",
+      "controlName": "Surgical_Misc_BloodVesselRepair01_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "1)",
+          "controlName": "Surgical_Misc_BloodVesselRepair01_cbo",
+          "listItems": [
+            "Finger Blood Vessel",
+            "Hand Blood Vessel",
+            "Ligation Major Artery Extremity Trauma",
+            "Ligation Temporal Artery",
+            "Lower Extremity Blood Vessel",
+            "Upper Extremity Blood Vessel"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Amputations",
+      "description": "2)",
+      "controlName": "Surgical_Misc_Amputations02_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "2)",
+          "controlName": "Surgical_Misc_Amputations02_cbo",
+          "listItems": [
+            "Reimplant digit exc thumb complete amputation",
+            "Reimplant, thumb",
+            "Metacarpal w or w/o interosseous transfer",
+            "Phalanx w closure any joint",
+            "Phalanx w local flaps any joint",
+            "Foot midtarsal",
+            "Foot transmetatarsal",
+            "Toe Metatarsal",
+            "Toe Metatarsophalangeal joint",
+            "Toe Interphalangeal joint"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Misc",
+      "subcategory": "Amputations",
+      "description": "1)",
+      "controlName": "Surgical_Misc_Amputations01_cbo",
+      "fields": [
+        {
+          "type": "list",
+          "label": "1)",
+          "controlName": "Surgical_Misc_Amputations01_cbo",
+          "listItems": [
+            "Reimplant digit exc thumb complete amputation",
+            "Reimplant, thumb",
+            "Metacarpal w or w/o interosseous transfer",
+            "Phalanx w closure any joint",
+            "Phalanx w local flaps any joint",
+            "Foot midtarsal",
+            "Foot transmetatarsal",
+            "Toe Metatarsal",
+            "Toe Metatarsophalangeal joint",
+            "Toe Interphalangeal joint"
+          ]
+        }
+      ]
+    }
+  ]
+}

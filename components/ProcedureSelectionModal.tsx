@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { PROCEDURES } from '../constants';
-import { Procedure } from '../types';
+import { ProcedureDefinition, ProcedureFieldDefinition, SelectedProcedure } from '../types';
+import { useProcedureConfig } from '../context/ProcedureConfigContext';
 import { SearchIcon } from './icons/SearchIcon';
 import { CloseIcon } from './icons/CloseIcon';
 import { BackIcon } from './icons/BackIcon';
@@ -8,46 +8,61 @@ import { BackIcon } from './icons/BackIcon';
 interface ProcedureSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (procedure: Procedure, option?: string, duration?: number, keepOpen?: boolean) => void;
+  onSelect: (procedure: SelectedProcedure, keepOpen?: boolean) => void;
+  currentDate: string;
+  currentPhysician: string;
 }
 
-type GroupedProcedures = Record<string, Record<string, Procedure[]>>;
+type GroupedProcedures = Record<string, Record<string, ProcedureDefinition[]>>;
 
-const SEDATION_CONTROL_NAME = 'Procedures02_ProceduralSedation_cbo';
-
-export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = ({ isOpen, onClose, onSelect }) => {
+export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSelect,
+  currentDate,
+  currentPhysician,
+}) => {
+  const { procedures } = useProcedureConfig();
+  
   const [searchTokens, setSearchTokens] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [activeProcedure, setActiveProcedure] = useState<Procedure | null>(null);
+  const [activeProcedure, setActiveProcedure] = useState<ProcedureDefinition | null>(null);
   const [keepOpen, setKeepOpen] = useState(false);
   const [preserveFilters, setPreserveFilters] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // State for the special sedation form
-  const [sedationOption, setSedationOption] = useState<string>('');
-  const [sedationDuration, setSedationDuration] = useState('');
+  // State for field values when a procedure with fields is selected
+  const [fieldValues, setFieldValues] = useState<Record<string, string | number>>({});
 
 
   useEffect(() => {
     if (!isOpen) {
       const timer = setTimeout(() => {
-        // Only clear filters if preserveFilters is false
         if (!preserveFilters) {
           setSearchTokens([]);
           setInputValue('');
         }
         setActiveProcedure(null);
-        // We do NOT reset keepOpen or preserveFilters preference here
-      }, 300); // Delay reset to allow closing animation to finish
+        setFieldValues({});
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen, preserveFilters]);
 
-  // Reset sedation form state when active procedure changes
+  // Reset field values when active procedure changes
   useEffect(() => {
-    if (activeProcedure && activeProcedure.controlName === SEDATION_CONTROL_NAME) {
-      setSedationOption(activeProcedure.options[0] || '');
-      setSedationDuration('');
+    if (activeProcedure) {
+      const initialValues: Record<string, string | number> = {};
+      activeProcedure.fields.forEach(field => {
+        if (field.type === 'list' && field.listItems && field.listItems.length > 0) {
+          initialValues[field.controlName] = field.listItems[0];
+        } else if (field.type === 'number') {
+          initialValues[field.controlName] = '';
+        } else {
+          initialValues[field.controlName] = '';
+        }
+      });
+      setFieldValues(initialValues);
     }
   }, [activeProcedure]);
 
@@ -71,24 +86,131 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     };
   }, [onClose, activeProcedure]);
 
-  const handleProcedureClick = (procedure: Procedure) => {
-    if (procedure.options && procedure.options.length > 0) {
+  const createSelectedProcedure = (
+    procedure: ProcedureDefinition, 
+    values: Record<string, string | number>
+  ): SelectedProcedure => {
+    const processedValues: Record<string, string | number> = {};
+    procedure.fields.forEach(field => {
+      const value = values[field.controlName];
+      if (field.type === 'number') {
+        const numVal = typeof value === 'string' ? parseInt(value, 10) : value;
+        if (!isNaN(numVal as number)) {
+          processedValues[field.controlName] = numVal;
+        }
+      } else if (value !== undefined && value !== '') {
+        processedValues[field.controlName] = value;
+      }
+    });
+
+    return {
+      id: `${procedure.controlName}-${Date.now()}`,
+      category: procedure.category,
+      subcategory: procedure.subcategory,
+      description: procedure.description,
+      controlName: procedure.controlName,
+      fields: procedure.fields,
+      fieldValues: processedValues,
+      date: currentDate,
+      physician: currentPhysician,
+    };
+  };
+
+  const handleProcedureClick = (procedure: ProcedureDefinition) => {
+    if (procedure.fields && procedure.fields.length > 0) {
       setActiveProcedure(procedure);
     } else {
-      onSelect(procedure, undefined, undefined, keepOpen);
+      const selected = createSelectedProcedure(procedure, {});
+      onSelect(selected, keepOpen);
     }
   };
 
-  const handleOptionSelect = (option: string) => {
+  const handleFieldSave = () => {
     if (activeProcedure) {
-      onSelect(activeProcedure, option, undefined, keepOpen);
+      const selected = createSelectedProcedure(activeProcedure, fieldValues);
+      onSelect(selected, keepOpen);
+      if (keepOpen) {
+        setActiveProcedure(null);
+        setFieldValues({});
+      }
     }
   };
 
-  const handleSedationSave = () => {
-    if (activeProcedure) {
-      const duration = sedationDuration ? parseInt(sedationDuration, 10) : undefined;
-      onSelect(activeProcedure, sedationOption, duration, keepOpen);
+  const handleQuickOptionSelect = (option: string) => {
+    if (activeProcedure && activeProcedure.fields.length === 1 && activeProcedure.fields[0].type === 'list') {
+      const values = { [activeProcedure.fields[0].controlName]: option };
+      const selected = createSelectedProcedure(activeProcedure, values);
+      onSelect(selected, keepOpen);
+      if (keepOpen) {
+        setActiveProcedure(null);
+        setFieldValues({});
+      }
+    }
+  };
+
+  const updateFieldValue = (controlName: string, value: string | number) => {
+    setFieldValues(prev => ({ ...prev, [controlName]: value }));
+  };
+
+  const renderFieldInput = (field: ProcedureFieldDefinition) => {
+    const value = fieldValues[field.controlName] ?? '';
+    
+    switch (field.type) {
+      case 'list':
+        return (
+          <div key={field.controlName}>
+            <label htmlFor={`field-${field.controlName}`} className="block text-sm font-medium text-slate-400 mb-2">
+              {field.label}
+            </label>
+            <select
+              id={`field-${field.controlName}`}
+              value={value as string}
+              onChange={(e) => updateFieldValue(field.controlName, e.target.value)}
+              className="bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 w-full text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+            >
+              {field.listItems?.map(item => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+        );
+      
+      case 'number':
+        return (
+          <div key={field.controlName}>
+            <label htmlFor={`field-${field.controlName}`} className="block text-sm font-medium text-slate-400 mb-2">
+              {field.label}
+            </label>
+            <input
+              id={`field-${field.controlName}`}
+              type="number"
+              value={value}
+              onChange={(e) => updateFieldValue(field.controlName, e.target.value)}
+              placeholder="Enter a number"
+              className="bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 w-full text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+            />
+          </div>
+        );
+      
+      case 'textbox':
+        return (
+          <div key={field.controlName}>
+            <label htmlFor={`field-${field.controlName}`} className="block text-sm font-medium text-slate-400 mb-2">
+              {field.label}
+            </label>
+            <input
+              id={`field-${field.controlName}`}
+              type="text"
+              value={value as string}
+              onChange={(e) => updateFieldValue(field.controlName, e.target.value)}
+              placeholder="Enter text"
+              className="bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 w-full text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+            />
+          </div>
+        );
+      
+      default:
+        return null;
     }
   };
 
@@ -99,22 +221,18 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   };
 
   const filteredProcedures = useMemo(() => {
-    // Combine existing tokens with current input (if it has valid chars)
     const currentInputTokens = inputValue.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
     const allTokens = [...searchTokens, ...currentInputTokens];
 
     if (allTokens.length === 0) {
-      return PROCEDURES;
+      return procedures;
     }
 
-    return PROCEDURES.filter((proc) => {
-      // Combine fields into a single search space
+    return procedures.filter((proc) => {
       const searchSpace = `${proc.category} ${proc.subcategory} ${proc.description}`.toLowerCase();
-      
-      // Check if every token is present in the search space (AND logic)
       return allTokens.every(token => searchSpace.includes(token));
     });
-  }, [searchTokens, inputValue]);
+  }, [procedures, searchTokens, inputValue]);
 
   const groupedProcedures = useMemo(() => {
     return filteredProcedures.reduce((acc, procedure) => {
@@ -146,16 +264,11 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     let candidates: string[] = [];
 
     if (isUnfiltered) {
-      // In the initial state, only show categories to avoid overwhelming the user
       candidates = Array.from(currentCats).sort();
     } else {
       const catsArray = Array.from(currentCats).sort();
-      // If we are already filtered down to a single category, showing it again is redundant
-      // unless we want to show it as a "confirm" action. But generally, subcategories are more useful here.
-      // We'll show categories if there are multiple possibilities.
       const usefulCats = catsArray.length > 1 ? catsArray : []; 
       const subcatsArray = Array.from(currentSubcats).sort();
-      
       candidates = [...usefulCats, ...subcatsArray];
     }
 
@@ -168,9 +281,6 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   const addToken = (token: string) => {
     setSearchTokens(prev => {
       const newTokens = [...prev];
-      
-      // Convert any pending input text into tokens to preserve them
-      // We split by whitespace to mimic the 'live' search behavior where multiple words are treated as separate AND tokens
       const currentInputTokens = inputValue.trim().split(/\s+/).filter(t => t.length > 0);
       
       currentInputTokens.forEach(t => {
@@ -198,7 +308,6 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
         setSearchTokens(prev => [...prev, val.toLowerCase()]);
         setInputValue('');
       } else if (e.key === ' ') {
-        // Prevent adding just a space to empty input if intended as token delimiter
         e.preventDefault(); 
       }
     } else if (e.key === 'Backspace' && !inputValue) {
@@ -295,11 +404,11 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
               <h3 className="text-lg font-semibold text-slate-400 mb-2 sticky top-0 bg-slate-800 py-3 z-0">{category}</h3>
               {Object.entries(subcategories)
                 .sort(([subA], [subB]) => subA.localeCompare(subB))
-                .map(([subcategory, procedures]) => (
+                .map(([subcategory, procs]) => (
                 <div key={subcategory} className="mb-3 pl-2">
                    <h4 className="font-semibold text-cyan-400 mb-2">{subcategory}</h4>
                    <ul className="space-y-1 pl-2 border-l border-slate-700">
-                    {[...procedures]
+                    {[...procs]
                         .sort((a, b) => a.description.localeCompare(b.description))
                         .map((proc, index) => (
                       <li key={`${proc.controlName}-${index}`}>
@@ -308,6 +417,9 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                           className="w-full text-left p-2 rounded-md hover:bg-cyan-500/10 transition-colors duration-200"
                         >
                           <span className="text-slate-300">{proc.description}</span>
+                          {proc.fields.length === 0 && (
+                            <span className="ml-2 text-xs text-slate-500">(quick add)</span>
+                          )}
                         </button>
                       </li>
                     ))}
@@ -326,58 +438,44 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     </>
   );
 
-  const renderOptionList = () => {
-    if (activeProcedure?.controlName === SEDATION_CONTROL_NAME) {
+  const renderFieldForm = () => {
+    if (!activeProcedure) return null;
+
+    // If there's only a single list field, show quick-select options
+    const isSingleListField = activeProcedure.fields.length === 1 && activeProcedure.fields[0].type === 'list';
+
+    if (isSingleListField) {
+      const field = activeProcedure.fields[0];
       return (
-        <div className="p-6 space-y-6 flex-grow">
-          <div>
-            <label htmlFor="sedation-option-select" className="block text-sm font-medium text-slate-400 mb-2">Option</label>
-            <select
-              id="sedation-option-select"
-              value={sedationOption}
-              onChange={(e) => setSedationOption(e.target.value)}
-              className="bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 w-full text-white focus:ring-2 focus:ring-cyan-500 outline-none"
-            >
-              {activeProcedure.options.map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="sedation-duration" className="block text-sm font-medium text-slate-400 mb-2">Duration (in minutes)</label>
-            <input
-              id="sedation-duration"
-              type="number"
-              value={sedationDuration}
-              onChange={(e) => setSedationDuration(e.target.value)}
-              placeholder="e.g., 30"
-              className="bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 w-full text-white focus:ring-2 focus:ring-cyan-500 outline-none"
-            />
-          </div>
-           <div className="pt-4">
-             <button
-                onClick={handleSedationSave}
-                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg shadow-cyan-500/30 transition-all duration-300"
-            >
-                Add Procedure
-            </button>
-           </div>
+        <div className="flex-grow overflow-y-auto px-4 pb-4 pt-2">
+          <ul className="space-y-1">
+            {field.listItems?.map((option, index) => (
+              <li key={index}>
+                <button
+                  onClick={() => handleQuickOptionSelect(option)}
+                  className="w-full text-left p-3 rounded-md hover:bg-cyan-500/10 transition-colors duration-200 text-slate-300"
+                >
+                  {option}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       );
     }
 
+    // Multiple fields or non-list fields - show full form
     return (
-      <div className="flex-grow overflow-y-auto px-4 pb-4 pt-2">
-        <ul className="space-y-1">
-          {activeProcedure?.options.map((option, index) => (
-            <li key={index}>
-              <button
-                onClick={() => handleOptionSelect(option)}
-                className="w-full text-left p-3 rounded-md hover:bg-cyan-500/10 transition-colors duration-200 text-slate-300"
-              >
-                {option}
-              </button>
-            </li>
-          ))}
-        </ul>
+      <div className="p-6 space-y-6 flex-grow overflow-y-auto">
+        {activeProcedure.fields.map(field => renderFieldInput(field))}
+        <div className="pt-4">
+          <button
+            onClick={handleFieldSave}
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg shadow-cyan-500/30 transition-all duration-300"
+          >
+            Add Procedure
+          </button>
+        </div>
       </div>
     );
   };
@@ -405,7 +503,11 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                     <h2 id="dialog-title" className="text-lg font-bold text-cyan-400 truncate" title={activeProcedure.description}>
                       {activeProcedure.description}
                     </h2>
-                    <span className="text-sm text-slate-400">Select an Option</span>
+                    <span className="text-sm text-slate-400">
+                      {activeProcedure.fields.length === 1 && activeProcedure.fields[0].type === 'list' 
+                        ? 'Select an Option' 
+                        : 'Enter Details'}
+                    </span>
                   </div>
                 </div>
               ) : (
@@ -442,7 +544,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           </div>
         </header>
 
-        {activeProcedure ? renderOptionList() : renderProcedureList()}
+        {activeProcedure ? renderFieldForm() : renderProcedureList()}
       </div>
        <style>{`
         @keyframes fade-in-fast {

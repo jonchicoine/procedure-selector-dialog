@@ -1,56 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ProcedureSelectionModal } from './components/ProcedureSelectionModal';
-import { EditProcedureModal } from './components/EditProcedureModal';
-import { Procedure } from './types';
+import { EditProcedureModal, PHYSICIANS } from './components/EditProcedureModal';
+import { ConfigEditorModal } from './components/ConfigEditorModal';
+import { SelectedProcedure } from './types';
+import { useProcedureConfig } from './context/ProcedureConfigContext';
 import { TrashIcon } from './components/icons/TrashIcon';
 import { EditIcon } from './components/icons/EditIcon';
-
-export const PHYSICIANS = [
-  'Dr. Alice Smith',
-  'Dr. Bob Johnson',
-  'Dr. Carol White',
-  'Dr. David Green',
-];
-
-// Create a new type for the combined selection
-export type SelectedProcedure = Procedure & { 
-  id: string;
-  selectedOption?: string; 
-  date: string;
-  physician: string;
-  duration?: number;
-};
+import { GearIcon } from './components/icons/GearIcon';
 
 const App: React.FC = () => {
+  const { error, clearError } = useProcedureConfig();
+  
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [procedureToEdit, setProcedureToEdit] = useState<SelectedProcedure | null>(null);
 
   const [selectedProcedures, setSelectedProcedures] = useState<SelectedProcedure[]>([]);
 
-  // State for new inputs
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
   const [currentPhysician, setCurrentPhysician] = useState(PHYSICIANS[0]);
-  
 
-  const handleSelectProcedure = (procedure: Procedure, option?: string, duration?: number, keepOpen: boolean = false) => {
-    const newSelection: SelectedProcedure = { 
-      ...procedure, 
-      selectedOption: option,
-      id: crypto.randomUUID(),
-      date: currentDate,
-      physician: currentPhysician,
-      duration: duration,
-    };
-    
-    // Prevent adding duplicates
+  const handleSelectProcedure = (procedure: SelectedProcedure, keepOpen: boolean = false) => {
     setSelectedProcedures(prev => {
+      // Prevent adding duplicates based on controlName and first field value
+      const firstFieldValue = Object.values(procedure.fieldValues)[0];
       const isDuplicate = prev.some(p => 
-        p.controlName === newSelection.controlName && 
-        p.selectedOption === newSelection.selectedOption
+        p.controlName === procedure.controlName && 
+        Object.values(p.fieldValues)[0] === firstFieldValue
       );
       if (isDuplicate) return prev;
-      return [...prev, newSelection];
+      return [...prev, procedure];
     });
 
     if (!keepOpen) {
@@ -69,7 +49,7 @@ const App: React.FC = () => {
 
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
-    setProcedureToEdit(null); // Clear the procedure after closing
+    setProcedureToEdit(null);
   };
 
   const handleSaveProcedure = (updatedProcedure: SelectedProcedure) => {
@@ -79,15 +59,39 @@ const App: React.FC = () => {
     handleCloseEditModal();
   };
 
+  // Helper to get display value for a field
+  const getFieldDisplayValue = (proc: SelectedProcedure): string => {
+    if (proc.fields.length === 0) return 'N/A';
+    const values = Object.values(proc.fieldValues);
+    if (values.length === 0) return 'N/A';
+    return values.map(v => String(v)).join(', ');
+  };
+
   return (
     <div className="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-start p-4 font-sans">
+      {/* Gear icon in upper right */}
+      <button
+        onClick={() => setIsConfigModalOpen(true)}
+        className="fixed top-4 right-4 p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-colors z-40"
+        title="Procedure Configuration"
+      >
+        <GearIcon className="w-6 h-6" />
+      </button>
+
       <div className="w-full max-w-6xl text-center mt-8">
         <h1 className="text-4xl md:text-5xl font-bold text-cyan-400 mb-4">Procedure Selector</h1>
         <p className="text-lg text-slate-400 mb-8">
           A demonstration of a searchable and filterable selection dialog for medical procedures.
         </p>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-lg text-red-200 flex justify-between items-center">
+            <span>{error}</span>
+            <button onClick={clearError} className="text-red-400 hover:text-white">✕</button>
+          </div>
+        )}
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-4xl mx-auto items-end">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 max-w-4xl mx-auto items-end">
           <div className="text-left">
             <label htmlFor="procedure-date" className="block text-sm font-medium text-slate-400 mb-2">Date</label>
             <input 
@@ -130,8 +134,7 @@ const App: React.FC = () => {
                     <th scope="col" className="px-6 py-3">Description</th>
                     <th scope="col" className="px-6 py-3">Date</th>
                     <th scope="col" className="px-6 py-3">Physician</th>
-                    <th scope="col" className="px-6 py-3">Option</th>
-                    <th scope="col" className="px-6 py-3">Duration (mins)</th>
+                    <th scope="col" className="px-6 py-3">Field Values</th>
                     <th scope="col" className="px-6 py-3 text-center">Actions</th>
                   </tr>
                 </thead>
@@ -147,8 +150,7 @@ const App: React.FC = () => {
                       <td className="px-6 py-4 font-medium text-white">{proc.description}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{proc.date}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{proc.physician}</td>
-                      <td className="px-6 py-4 text-cyan-400">{proc.selectedOption || 'N/A'}</td>
-                      <td className="px-6 py-4">{proc.duration ?? 'N/A'}</td>
+                      <td className="px-6 py-4 text-cyan-400">{getFieldDisplayValue(proc)}</td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center items-center space-x-2">
                           <button 
@@ -192,6 +194,11 @@ const App: React.FC = () => {
         onClose={handleCloseEditModal}
         onSave={handleSaveProcedure}
         procedure={procedureToEdit}
+      />
+
+      <ConfigEditorModal
+        isOpen={isConfigModalOpen}
+        onClose={() => setIsConfigModalOpen(false)}
       />
 
       <footer className="w-full text-center p-4 mt-auto text-slate-500 text-sm">
