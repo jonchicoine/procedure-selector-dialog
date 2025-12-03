@@ -1,0 +1,5 @@
+{
+  "name": "Procedure Selector Dialog",
+  "description": "A React application that provides a searchable popup dialog to select from a list of medical procedures. The list can be filtered by group, subgroup, or description for quick access.",
+  "requestFramePermissions": []
+}
