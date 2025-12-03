@@ -289,6 +289,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
 
     const isUnfiltered = searchTokens.length === 0 && !inputValue.trim();
     const existingTokens = new Set(searchTokens.map(t => t.toLowerCase()));
+    const currentInput = inputValue.toLowerCase().trim();
     
     let candidates: string[] = [];
 
@@ -302,9 +303,21 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     }
 
     // Remove duplicates and already selected tokens
-    return Array.from(new Set(candidates))
-      .filter(s => !existingTokens.has(s.toLowerCase()))
-      .slice(0, 30); // Limit to 30 to prevent UI clutter
+    let filtered = Array.from(new Set(candidates))
+      .filter(s => !existingTokens.has(s.toLowerCase()));
+    
+    // Prioritize suggestions that contain the current input value
+    if (currentInput) {
+      filtered.sort((a, b) => {
+        const aContains = a.toLowerCase().includes(currentInput);
+        const bContains = b.toLowerCase().includes(currentInput);
+        if (aContains && !bContains) return -1;
+        if (!aContains && bContains) return 1;
+        return a.localeCompare(b);
+      });
+    }
+    
+    return filtered.slice(0, 30); // Limit to 30 to prevent UI clutter
   }, [filteredProcedures, searchTokens, inputValue]);
 
   const addToken = (token: string) => {
