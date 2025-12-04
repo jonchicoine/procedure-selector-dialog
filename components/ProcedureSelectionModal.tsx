@@ -399,6 +399,100 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     });
   }, [procedures, searchTokens, inputValue, getCategoryName, getSubcategoryName]);
 
+  // Helper to determine why a procedure matched - tracks all match sources
+  interface MatchReasons {
+    category: boolean;
+    subcategory: boolean;
+    description: string[];  // matched tokens in description
+    aliases: string[];      // matched alias values
+    tags: string[];         // matched tag values
+  }
+  
+  const getMatchReasons = (proc: ProcedureDefinition): MatchReasons => {
+    const currentInputTokens = inputValue.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
+    const otherTokens = searchTokens.filter(t => t.type !== 'tag').map(t => t.value.toLowerCase());
+    const allTextTokens = [...otherTokens, ...currentInputTokens];
+    
+    const reasons: MatchReasons = {
+      category: false,
+      subcategory: false,
+      description: [],
+      aliases: [],
+      tags: [],
+    };
+    
+    if (allTextTokens.length === 0) {
+      return reasons;
+    }
+    
+    const categoryName = getCategoryName(proc.categoryId).toLowerCase();
+    const subcategoryName = getSubcategoryName(proc.subcategoryId).toLowerCase();
+    const description = proc.description.toLowerCase();
+    
+    allTextTokens.forEach(token => {
+      // Check category match
+      if (categoryName.includes(token)) {
+        reasons.category = true;
+      }
+      
+      // Check subcategory match
+      if (subcategoryName.includes(token)) {
+        reasons.subcategory = true;
+      }
+      
+      // Check description match
+      if (description.includes(token) && !reasons.description.includes(token)) {
+        reasons.description.push(token);
+      }
+      
+      // Check alias matches
+      if (proc.aliases && proc.aliases.length > 0) {
+        proc.aliases.forEach(alias => {
+          if (alias.toLowerCase().includes(token) && !reasons.aliases.includes(alias)) {
+            reasons.aliases.push(alias);
+          }
+        });
+      }
+      
+      // Check tag matches (only for tokens >= 3 chars)
+      if (token.length >= 3 && proc.tags && proc.tags.length > 0) {
+        proc.tags.forEach(tag => {
+          if (tag.toLowerCase().includes(token) && !reasons.tags.includes(tag)) {
+            reasons.tags.push(tag);
+          }
+        });
+      }
+    });
+    
+    return reasons;
+  };
+  
+  // Build tooltip text from match reasons
+  const buildMatchTooltip = (proc: ProcedureDefinition, reasons: MatchReasons): string | null => {
+    const parts: string[] = [];
+    
+    if (reasons.category) {
+      parts.push(`Category: ${getCategoryName(proc.categoryId)}`);
+    }
+    if (reasons.subcategory) {
+      parts.push(`Subcategory: ${getSubcategoryName(proc.subcategoryId)}`);
+    }
+    if (reasons.description.length > 0) {
+      parts.push(`Description: "${reasons.description.join('", "')}"`);
+    }
+    if (reasons.aliases.length > 0) {
+      parts.push(`Alias: ${reasons.aliases.join(', ')}`);
+    }
+    if (reasons.tags.length > 0) {
+      parts.push(`Body part: ${reasons.tags.join(', ')}`);
+    }
+    
+    return parts.length > 0 ? `Matched on:\n${parts.join('\n')}` : null;
+  };
+  
+  // Check if there are any active search terms
+  const hasActiveSearch = searchTokens.length > 0 || inputValue.trim().length > 0;
+
   // Group procedures by categoryId, then subcategoryId
   const groupedProcedures = useMemo(() => {
     return filteredProcedures.reduce((acc, procedure) => {
@@ -988,36 +1082,59 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                 
                 return a.description.localeCompare(b.description);
               })
-              .map((proc, index) => (
-                <div key={`flat-${proc.controlName}-${index}`} className="flex items-center group hover:bg-slate-700/30 rounded transition-colors">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleFavorite(proc.controlName); }}
-                    className={`p-1.5 transition-all flex-shrink-0 ${
-                      isFavorite(proc.controlName) 
-                        ? 'text-amber-400 hover:text-amber-300' 
-                        : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
-                    }`}
-                    aria-label={isFavorite(proc.controlName) ? "Remove from favorites" : "Add to favorites"}
-                  >
-                    <StarIcon className="h-4 w-4" filled={isFavorite(proc.controlName)} />
-                  </button>
-                  <button
-                    onClick={() => handleProcedureClick(proc)}
-                    className="flex-grow text-left py-1.5 px-2 rounded flex items-center gap-2 min-w-0"
-                  >
-                    <span className="bg-purple-700/50 text-purple-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
-                      {getCategoryName(proc.categoryId)}
-                    </span>
-                    <span className="text-slate-300 truncate flex-grow">{proc.description}</span>
-                    <span className="bg-cyan-700/50 text-cyan-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
-                      {getSubcategoryName(proc.subcategoryId)}
-                    </span>
-                    {proc.fields.length === 0 && (
-                      <span className="text-xs text-slate-500 flex-shrink-0">(quick)</span>
-                    )}
-                  </button>
-                </div>
-              ))}
+              .map((proc, index) => {
+                const reasons = getMatchReasons(proc);
+                const tooltip = hasActiveSearch ? buildMatchTooltip(proc, reasons) : null;
+                
+                return (
+                  <div key={`flat-${proc.controlName}-${index}`} className="flex items-center group hover:bg-slate-700/30 rounded transition-colors">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(proc.controlName); }}
+                      className={`p-1.5 transition-all flex-shrink-0 ${
+                        isFavorite(proc.controlName) 
+                          ? 'text-amber-400 hover:text-amber-300' 
+                          : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
+                      }`}
+                      aria-label={isFavorite(proc.controlName) ? "Remove from favorites" : "Add to favorites"}
+                    >
+                      <StarIcon className="h-4 w-4" filled={isFavorite(proc.controlName)} />
+                    </button>
+                    <button
+                      onClick={() => handleProcedureClick(proc)}
+                      className="flex-grow text-left py-1.5 px-2 rounded flex items-center gap-2 min-w-0"
+                    >
+                      <span className="text-slate-300 truncate flex-grow">{proc.description}</span>
+                      <span className="bg-cyan-700/50 text-cyan-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
+                        {getSubcategoryName(proc.subcategoryId)}
+                      </span>
+                      {tooltip && (
+                        <span 
+                          className="text-slate-500 flex-shrink-0 hover:text-slate-300 cursor-help" 
+                          title={tooltip}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                          </svg>
+                        </span>
+                      )}
+                      {proc.fields.length === 0 ? (
+                        <span className="text-amber-400 flex-shrink-0" title="Quick add - no form required">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                          </svg>
+                        </span>
+                      ) : (
+                        <span className="text-slate-500 flex-shrink-0" title="Opens form for additional options">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                          </svg>
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
           </div>
         ) : flatView && filteredProcedures.length === 0 ? (
           <div className="text-center py-6 text-slate-500" role="status">
@@ -1181,30 +1298,56 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                         <ul className="space-y-0 pl-2 border-l border-slate-700">
                           {[...procs]
                             .sort((a, b) => a.description.localeCompare(b.description))
-                            .map((proc, index) => (
-                              <li key={`${proc.controlName}-${index}`} className="flex items-center group">
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); toggleFavorite(proc.controlName); }}
-                                  className={`p-1 mr-1 transition-all ${
-                                    isFavorite(proc.controlName) 
-                                      ? 'text-amber-400 hover:text-amber-300' 
-                                      : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
-                                  }`}
-                                  aria-label={isFavorite(proc.controlName) ? "Remove from favorites" : "Add to favorites"}
-                                >
-                                  <StarIcon className="h-4 w-4" filled={isFavorite(proc.controlName)} />
-                                </button>
-                                <button
-                                  onClick={() => handleProcedureClick(proc)}
-                                  className="flex-grow text-left py-1 px-1.5 rounded hover:bg-cyan-500/10 transition-colors duration-200"
-                                >
-                                  <span className="text-slate-300">{proc.description}</span>
-                                  {proc.fields.length === 0 && (
-                                    <span className="ml-2 text-xs text-slate-500">(quick add)</span>
-                                  )}
-                                </button>
-                              </li>
-                            ))}
+                            .map((proc, index) => {
+                              const reasons = getMatchReasons(proc);
+                              const tooltip = hasActiveSearch ? buildMatchTooltip(proc, reasons) : null;
+                              
+                              return (
+                                <li key={`${proc.controlName}-${index}`} className="flex items-center group">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); toggleFavorite(proc.controlName); }}
+                                    className={`p-1 mr-1 transition-all ${
+                                      isFavorite(proc.controlName) 
+                                        ? 'text-amber-400 hover:text-amber-300' 
+                                        : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
+                                    }`}
+                                    aria-label={isFavorite(proc.controlName) ? "Remove from favorites" : "Add to favorites"}
+                                  >
+                                    <StarIcon className="h-4 w-4" filled={isFavorite(proc.controlName)} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleProcedureClick(proc)}
+                                    className="flex-grow text-left py-1 px-1.5 rounded hover:bg-cyan-500/10 transition-colors duration-200 flex items-center"
+                                  >
+                                    <span className="text-slate-300">{proc.description}</span>
+                                    {tooltip && (
+                                      <span 
+                                        className="ml-1.5 text-slate-500 hover:text-slate-300 cursor-help" 
+                                        title={tooltip}
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                                        </svg>
+                                      </span>
+                                    )}
+                                    {proc.fields.length === 0 ? (
+                                      <span className="ml-auto pl-2 text-amber-400 flex-shrink-0" title="Quick add - no form required">
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                                        </svg>
+                                      </span>
+                                    ) : (
+                                      <span className="ml-auto pl-2 text-slate-500 flex-shrink-0" title="Opens form for additional options">
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                      </span>
+                                    )}
+                                  </button>
+                                </li>
+                              );
+                            })}
                         </ul>
                       )}
                     </div>
