@@ -67,7 +67,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   const [keepOpen, setKeepOpen] = useState(false);
   const [preserveFilters, setPreserveFilters] = useState(false);
   const [filterOnExpand, setFilterOnExpand] = useState(true);
-  const [catOnly, setCatOnly] = useState(true);
+  const [catOnly, setCatOnly] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // State for field values when a procedure with fields is selected
