@@ -72,6 +72,7 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     exportConfig,
     resetToDefaults,
     hasStoredConfig,
+    updateProcedures,
     updateProcedure, 
     addProcedure, 
     deleteProcedure,
@@ -104,6 +105,21 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
   const [githubToken, setGithubToken] = useState(getStoredToken() || '');
   const [isPublishing, setIsPublishing] = useState(false);
   const [commitMessage, setCommitMessage] = useState('');
+  
+  // Move procedures modal state
+  const [showMoveModal, setShowMoveModal] = useState<'category' | 'subcategory' | null>(null);
+  const [moveTargetId, setMoveTargetId] = useState<string>('');
+  const [showDeleteEmptyPrompt, setShowDeleteEmptyPrompt] = useState<{type: 'category' | 'subcategory', id: string, name: string} | null>(null);
+  
+  // Multi-select state for procedures
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectedProcedureIndices, setSelectedProcedureIndices] = useState<Set<number>>(new Set());
+  const [showBulkMoveModal, setShowBulkMoveModal] = useState<'category' | 'subcategory' | null>(null);
+  const [bulkMoveTargetId, setBulkMoveTargetId] = useState<string>('');
+  
+  // Create new category/subcategory in move modal
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
 
   // Reset state when modal closes
   useEffect(() => {
@@ -118,6 +134,15 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
       setIsAddingNew(false);
       setSearchTerm('');
       setActiveTab('procedures');
+      setShowMoveModal(null);
+      setMoveTargetId('');
+      setShowDeleteEmptyPrompt(null);
+      setIsMultiSelectMode(false);
+      setSelectedProcedureIndices(new Set());
+      setShowBulkMoveModal(null);
+      setBulkMoveTargetId('');
+      setIsCreatingNew(false);
+      setNewItemName('');
     }
   }, [isOpen]);
 
@@ -386,10 +411,11 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     if (!selectedCategoryId || isAddingNew) return;
     const cat = categories.find(c => c.id === selectedCategoryId);
     
-    // Check if category is in use
+    // Check if category is in use - open move modal instead of blocking
     const procsUsingCategory = procedures.filter(p => p.categoryId === selectedCategoryId);
     if (procsUsingCategory.length > 0) {
-      showToast(`Cannot delete: ${procsUsingCategory.length} procedure(s) use this category`, 'error');
+      setShowMoveModal('category');
+      setMoveTargetId('');
       return;
     }
     
@@ -401,6 +427,129 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     setEditingCategory(null);
     setHasChanges(false);
     showToast(`Category "${cat?.name}" deleted`, 'success');
+  };
+
+  // Handle moving all procedures from one category to another
+  const handleMoveProcedures = (type: 'category' | 'subcategory', sourceId: string, targetId: string) => {
+    const updatedProcedures = procedures.map(p => {
+      if (type === 'category' && p.categoryId === sourceId) {
+        return { ...p, categoryId: targetId };
+      }
+      if (type === 'subcategory' && p.subcategoryId === sourceId) {
+        return { ...p, subcategoryId: targetId };
+      }
+      return p;
+    });
+    updateProcedures(updatedProcedures);
+  };
+
+  // Create new category/subcategory from move modal
+  const handleCreateNewForMove = () => {
+    if (!newItemName.trim()) {
+      showToast('Please enter a name', 'error');
+      return;
+    }
+    
+    const newId = slugify(newItemName);
+    
+    if (showMoveModal === 'category' || showBulkMoveModal === 'category') {
+      // Check for duplicate
+      if (categories.find(c => c.id === newId)) {
+        showToast('A category with this ID already exists', 'error');
+        return;
+      }
+      const newCategory: CategoryDefinition = {
+        id: newId,
+        name: newItemName.trim(),
+        sortOrder: Math.max(0, ...categories.map(c => c.sortOrder)) + 10,
+      };
+      addCategory(newCategory);
+      
+      // Set as target
+      if (showMoveModal) {
+        setMoveTargetId(newId);
+      } else {
+        setBulkMoveTargetId(newId);
+      }
+      showToast(`Category "${newItemName.trim()}" created`, 'success');
+    } else {
+      // Check for duplicate
+      if (subcategories.find(s => s.id === newId)) {
+        showToast('A subcategory with this ID already exists', 'error');
+        return;
+      }
+      const newSubcategory: SubcategoryDefinition = {
+        id: newId,
+        name: newItemName.trim(),
+        sortOrder: Math.max(0, ...subcategories.map(s => s.sortOrder)) + 10,
+      };
+      addSubcategory(newSubcategory);
+      
+      // Set as target
+      if (showMoveModal) {
+        setMoveTargetId(newId);
+      } else {
+        setBulkMoveTargetId(newId);
+      }
+      showToast(`Subcategory "${newItemName.trim()}" created`, 'success');
+    }
+    
+    setIsCreatingNew(false);
+    setNewItemName('');
+  };
+
+  const handleConfirmMove = () => {
+    if (!moveTargetId) {
+      showToast('Please select a target', 'error');
+      return;
+    }
+    
+    const sourceId = showMoveModal === 'category' ? selectedCategoryId : selectedSubcategoryId;
+    const sourceName = showMoveModal === 'category' 
+      ? getCategoryName(selectedCategoryId || '') 
+      : getSubcategoryName(selectedSubcategoryId || '');
+    
+    if (!sourceId) return;
+    
+    const affectedCount = procedures.filter(p => 
+      showMoveModal === 'category' ? p.categoryId === sourceId : p.subcategoryId === sourceId
+    ).length;
+    
+    handleMoveProcedures(showMoveModal!, sourceId, moveTargetId);
+    
+    const targetName = showMoveModal === 'category' 
+      ? getCategoryName(moveTargetId) 
+      : getSubcategoryName(moveTargetId);
+    
+    showToast(`Moved ${affectedCount} procedure(s) to "${targetName}"`, 'success');
+    setShowMoveModal(null);
+    setMoveTargetId('');
+    setIsCreatingNew(false);
+    setNewItemName('');
+    
+    // Prompt to delete the now-empty source
+    setShowDeleteEmptyPrompt({
+      type: showMoveModal!,
+      id: sourceId,
+      name: sourceName
+    });
+  };
+
+  const handleConfirmDeleteEmpty = (shouldDelete: boolean) => {
+    if (shouldDelete && showDeleteEmptyPrompt) {
+      if (showDeleteEmptyPrompt.type === 'category') {
+        deleteCategory(showDeleteEmptyPrompt.id);
+        setSelectedCategoryId(null);
+        setEditingCategory(null);
+      } else {
+        deleteSubcategory(showDeleteEmptyPrompt.id);
+        setSelectedSubcategoryId(null);
+        setEditingSubcategory(null);
+      }
+      showToast(`${showDeleteEmptyPrompt.type === 'category' ? 'Category' : 'Subcategory'} "${showDeleteEmptyPrompt.name}" deleted`, 'success');
+    }
+    setShowDeleteEmptyPrompt(null);
+    setHasChanges(false);
   };
 
   // Subcategory handlers
@@ -467,9 +616,11 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     if (!selectedSubcategoryId || isAddingNew) return;
     const subcat = subcategories.find(s => s.id === selectedSubcategoryId);
     
+    // Check if subcategory is in use - open move modal instead of blocking
     const procsUsingSubcategory = procedures.filter(p => p.subcategoryId === selectedSubcategoryId);
     if (procsUsingSubcategory.length > 0) {
-      showToast(`Cannot delete: ${procsUsingSubcategory.length} procedure(s) use this subcategory`, 'error');
+      setShowMoveModal('subcategory');
+      setMoveTargetId('');
       return;
     }
     
@@ -539,6 +690,60 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     setHasChanges(false);
     setIsAddingNew(false);
     setSearchTerm('');
+    setIsMultiSelectMode(false);
+    setSelectedProcedureIndices(new Set());
+  };
+
+  // Multi-select handlers
+  const toggleProcedureSelection = (idx: number) => {
+    const newSet = new Set(selectedProcedureIndices);
+    if (newSet.has(idx)) {
+      newSet.delete(idx);
+    } else {
+      newSet.add(idx);
+    }
+    setSelectedProcedureIndices(newSet);
+  };
+
+  const selectAllVisible = () => {
+    const newSet = new Set(filteredProcedures.map(({ idx }) => idx));
+    setSelectedProcedureIndices(newSet);
+  };
+
+  const clearSelection = () => {
+    setSelectedProcedureIndices(new Set());
+  };
+
+  const handleBulkMove = () => {
+    if (!bulkMoveTargetId || selectedProcedureIndices.size === 0) {
+      showToast('Please select a target', 'error');
+      return;
+    }
+    
+    const updatedProcedures = procedures.map((p, idx) => {
+      if (selectedProcedureIndices.has(idx)) {
+        if (showBulkMoveModal === 'category') {
+          return { ...p, categoryId: bulkMoveTargetId };
+        } else {
+          return { ...p, subcategoryId: bulkMoveTargetId };
+        }
+      }
+      return p;
+    });
+    
+    updateProcedures(updatedProcedures);
+    
+    const targetName = showBulkMoveModal === 'category' 
+      ? getCategoryName(bulkMoveTargetId) 
+      : getSubcategoryName(bulkMoveTargetId);
+    
+    showToast(`Updated ${selectedProcedureIndices.size} procedure(s) to "${targetName}"`, 'success');
+    setShowBulkMoveModal(null);
+    setBulkMoveTargetId('');
+    setSelectedProcedureIndices(new Set());
+    setIsMultiSelectMode(false);
+    setIsCreatingNew(false);
+    setNewItemName('');
   };
 
   const updateProcedureField = <K extends keyof ProcedureDefinition>(key: K, value: ProcedureDefinition[K]) => {
@@ -616,16 +821,83 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
           type="text"
           placeholder="Search procedures..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            // Clear selection when search changes to avoid confusion
+            if (isMultiSelectMode) {
+              setSelectedProcedureIndices(new Set());
+            }
+          }}
           className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
-        <button
-          onClick={handleAddNewProcedure}
-          className="w-full px-3 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
-        >
-          <PlusIcon className="w-4 h-4" />
-          Add New Procedure
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleAddNewProcedure}
+            className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Add New
+          </button>
+          <button
+            onClick={() => {
+              setIsMultiSelectMode(!isMultiSelectMode);
+              setSelectedProcedureIndices(new Set());
+              if (!isMultiSelectMode) {
+                setSelectedIndex(null);
+                setEditingProcedure(null);
+              }
+            }}
+            className={`px-3 py-2 rounded-lg transition-colors ${
+              isMultiSelectMode 
+                ? 'bg-cyan-600 text-white' 
+                : 'bg-slate-700 hover:bg-slate-600 text-white'
+            }`}
+            title={isMultiSelectMode ? 'Exit multi-select' : 'Select multiple'}
+          >
+            {isMultiSelectMode ? 'Done' : 'Select'}
+          </button>
+        </div>
+        
+        {/* Multi-select action bar */}
+        {isMultiSelectMode && (
+          <div className="bg-slate-900 border border-slate-600 rounded-lg p-2 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400">
+                {selectedProcedureIndices.size} of {filteredProcedures.length} selected
+              </span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={selectAllVisible}
+                  className="text-cyan-400 hover:text-cyan-300"
+                >
+                  Select All
+                </button>
+                <button 
+                  onClick={clearSelection}
+                  className="text-slate-400 hover:text-slate-300"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            {selectedProcedureIndices.size > 0 && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowBulkMoveModal('category')}
+                  className="flex-1 px-2 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded transition-colors"
+                >
+                  Change Category
+                </button>
+                <button
+                  onClick={() => setShowBulkMoveModal('subcategory')}
+                  className="flex-1 px-2 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded transition-colors"
+                >
+                  Change Subcategory
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         <div className="text-xs text-slate-500 mb-2">
@@ -634,19 +906,42 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
         {filteredProcedures.map(({ proc, idx }) => (
           <button
             key={`${proc.controlName}-${idx}`}
-            onClick={() => handleSelectProcedure(idx)}
-            className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${
-              selectedIndex === idx && !isAddingNew
+            onClick={() => {
+              if (isMultiSelectMode) {
+                toggleProcedureSelection(idx);
+              } else {
+                handleSelectProcedure(idx);
+              }
+            }}
+            className={`w-full text-left p-3 rounded-lg mb-1 transition-colors flex items-start gap-2 ${
+              isMultiSelectMode && selectedProcedureIndices.has(idx)
+                ? 'bg-cyan-600/30 border border-cyan-500'
+                : selectedIndex === idx && !isAddingNew && !isMultiSelectMode
                 ? 'bg-cyan-600/30 border border-cyan-500'
                 : 'bg-slate-700/50 hover:bg-slate-700 border border-transparent'
             }`}
           >
-            <div className="text-white text-sm font-medium truncate">{proc.description || '(No description)'}</div>
-            <div className="text-slate-400 text-xs truncate">
-              {getCategoryName(proc.categoryId)} → {getSubcategoryName(proc.subcategoryId)}
-            </div>
-            <div className="text-slate-500 text-xs mt-1">
-              {proc.fields.length === 0 ? 'No fields (immediate add)' : `${proc.fields.length} field(s)`}
+            {isMultiSelectMode && (
+              <div className={`w-4 h-4 mt-0.5 rounded border flex-shrink-0 flex items-center justify-center ${
+                selectedProcedureIndices.has(idx)
+                  ? 'bg-cyan-500 border-cyan-500'
+                  : 'border-slate-500'
+              }`}>
+                {selectedProcedureIndices.has(idx) && (
+                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-white text-sm font-medium truncate">{proc.description || '(No description)'}</div>
+              <div className="text-slate-400 text-xs truncate">
+                {getCategoryName(proc.categoryId)} → {getSubcategoryName(proc.subcategoryId)}
+              </div>
+              <div className="text-slate-500 text-xs mt-1">
+                {proc.fields.length === 0 ? 'No fields (immediate add)' : `${proc.fields.length} field(s)`}
+              </div>
             </div>
           </button>
         ))}
@@ -974,7 +1269,12 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     </div>
   );
 
-  const renderCategoryEditor = () => (
+  const renderCategoryEditor = () => {
+    const affectedProceduresCount = selectedCategoryId && !isAddingNew
+      ? procedures.filter(p => p.categoryId === selectedCategoryId).length
+      : 0;
+    
+    return (
     <div className="w-3/5 flex flex-col overflow-hidden">
       {editingCategory ? (
         <>
@@ -1036,6 +1336,33 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
                 />
               </div>
             </div>
+
+            {/* Affected procedures section */}
+            {!isAddingNew && selectedCategoryId && (
+              <div className="mt-4 bg-slate-700/50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-medium text-slate-300">Affected Procedures</h4>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {affectedProceduresCount === 0 
+                        ? 'No procedures use this category'
+                        : `${affectedProceduresCount} procedure(s) use this category`}
+                    </p>
+                  </div>
+                  {affectedProceduresCount > 0 && (
+                    <button
+                      onClick={() => {
+                        setShowMoveModal('category');
+                        setMoveTargetId('');
+                      }}
+                      className="px-3 py-1.5 text-sm bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
+                    >
+                      Move All To...
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="p-4 border-t border-slate-700 flex items-center justify-between">
@@ -1084,6 +1411,7 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
       )}
     </div>
   );
+  };
 
   const renderSubcategoriesList = () => (
     <div className="w-2/5 border-r border-slate-700 flex flex-col">
@@ -1126,7 +1454,12 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     </div>
   );
 
-  const renderSubcategoryEditor = () => (
+  const renderSubcategoryEditor = () => {
+    const affectedProceduresCount = selectedSubcategoryId && !isAddingNew
+      ? procedures.filter(p => p.subcategoryId === selectedSubcategoryId).length
+      : 0;
+    
+    return (
     <div className="w-3/5 flex flex-col overflow-hidden">
       {editingSubcategory ? (
         <>
@@ -1188,6 +1521,33 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
                 />
               </div>
             </div>
+
+            {/* Affected procedures section */}
+            {!isAddingNew && selectedSubcategoryId && (
+              <div className="mt-4 bg-slate-700/50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-medium text-slate-300">Affected Procedures</h4>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {affectedProceduresCount === 0 
+                        ? 'No procedures use this subcategory'
+                        : `${affectedProceduresCount} procedure(s) use this subcategory`}
+                    </p>
+                  </div>
+                  {affectedProceduresCount > 0 && (
+                    <button
+                      onClick={() => {
+                        setShowMoveModal('subcategory');
+                        setMoveTargetId('');
+                      }}
+                      className="px-3 py-1.5 text-sm bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
+                    >
+                      Move All To...
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="p-4 border-t border-slate-700 flex items-center justify-between">
@@ -1236,6 +1596,7 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
       )}
     </div>
   );
+  };
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -1457,6 +1818,315 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
                     Publish
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Move Procedures Modal */}
+      {showMoveModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
+          <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-md border border-slate-700">
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+              <h3 className="text-lg font-semibold text-white">
+                Move Procedures to Another {showMoveModal === 'category' ? 'Category' : 'Subcategory'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowMoveModal(null);
+                  setMoveTargetId('');
+                  setIsCreatingNew(false);
+                  setNewItemName('');
+                }}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                <CloseIcon className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              <p className="text-sm text-slate-300">
+                {showMoveModal === 'category' 
+                  ? `Move all ${procedures.filter(p => p.categoryId === selectedCategoryId).length} procedure(s) from "${getCategoryName(selectedCategoryId || '')}" to:`
+                  : `Move all ${procedures.filter(p => p.subcategoryId === selectedSubcategoryId).length} procedure(s) from "${getSubcategoryName(selectedSubcategoryId || '')}" to:`}
+              </p>
+              
+              {!isCreatingNew ? (
+                <>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">
+                      Target {showMoveModal === 'category' ? 'Category' : 'Subcategory'} *
+                    </label>
+                    <select
+                      value={moveTargetId}
+                      onChange={(e) => setMoveTargetId(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    >
+                      <option value="">Select {showMoveModal === 'category' ? 'category' : 'subcategory'}...</option>
+                      {showMoveModal === 'category' 
+                        ? sortedCategories
+                            .filter(c => c.id !== selectedCategoryId)
+                            .map(c => <option key={c.id} value={c.id}>{c.name}</option>)
+                        : sortedSubcategories
+                            .filter(s => s.id !== selectedSubcategoryId)
+                            .map(s => <option key={s.id} value={s.id}>{s.name}</option>)
+                      }
+                    </select>
+                  </div>
+                  
+                  <div className="text-center">
+                    <span className="text-slate-500 text-xs">— or —</span>
+                  </div>
+                  
+                  <button
+                    onClick={() => setIsCreatingNew(true)}
+                    className="w-full px-3 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-600/50 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Create New {showMoveModal === 'category' ? 'Category' : 'Subcategory'}
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">
+                      New {showMoveModal === 'category' ? 'Category' : 'Subcategory'} Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newItemName}
+                      onChange={(e) => setNewItemName(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder={`e.g., ${showMoveModal === 'category' ? 'Cardiovascular' : 'Central Line'}`}
+                      autoFocus
+                    />
+                    {newItemName && (
+                      <p className="text-xs text-slate-500 mt-1">ID will be: {slugify(newItemName)}</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setIsCreatingNew(false);
+                        setNewItemName('');
+                      }}
+                      className="flex-1 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handleCreateNewForMove}
+                      disabled={!newItemName.trim()}
+                      className={`flex-1 px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                        !newItemName.trim()
+                          ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                          : 'bg-green-600 hover:bg-green-500 text-white'
+                      }`}
+                    >
+                      <PlusIcon className="w-4 h-4" />
+                      Create & Select
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 p-4 border-t border-slate-700">
+              <button
+                onClick={() => {
+                  setShowMoveModal(null);
+                  setMoveTargetId('');
+                  setIsCreatingNew(false);
+                  setNewItemName('');
+                }}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmMove}
+                disabled={!moveTargetId}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  !moveTargetId
+                    ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                    : 'bg-amber-600 hover:bg-amber-500 text-white'
+                }`}
+              >
+                Move Procedures
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Empty Prompt Modal */}
+      {showDeleteEmptyPrompt && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
+          <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-md border border-slate-700">
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+              <h3 className="text-lg font-semibold text-white">
+                Delete Empty {showDeleteEmptyPrompt.type === 'category' ? 'Category' : 'Subcategory'}?
+              </h3>
+              <button
+                onClick={() => handleConfirmDeleteEmpty(false)}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                <CloseIcon className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <p className="text-sm text-slate-300">
+                "{showDeleteEmptyPrompt.name}" is now empty. Would you like to delete it?
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 p-4 border-t border-slate-700">
+              <button
+                onClick={() => handleConfirmDeleteEmpty(false)}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+              >
+                Keep It
+              </button>
+              <button
+                onClick={() => handleConfirmDeleteEmpty(true)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors flex items-center gap-2"
+              >
+                <TrashIcon className="w-4 h-4" />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Move Modal for multi-select */}
+      {showBulkMoveModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
+          <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-md border border-slate-700">
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+              <h3 className="text-lg font-semibold text-white">
+                Change {showBulkMoveModal === 'category' ? 'Category' : 'Subcategory'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowBulkMoveModal(null);
+                  setBulkMoveTargetId('');
+                  setIsCreatingNew(false);
+                  setNewItemName('');
+                }}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                <CloseIcon className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              <p className="text-sm text-slate-300">
+                Change {showBulkMoveModal === 'category' ? 'category' : 'subcategory'} for {selectedProcedureIndices.size} selected procedure(s):
+              </p>
+              
+              {!isCreatingNew ? (
+                <>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">
+                      New {showBulkMoveModal === 'category' ? 'Category' : 'Subcategory'} *
+                    </label>
+                    <select
+                      value={bulkMoveTargetId}
+                      onChange={(e) => setBulkMoveTargetId(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    >
+                      <option value="">Select {showBulkMoveModal === 'category' ? 'category' : 'subcategory'}...</option>
+                      {showBulkMoveModal === 'category' 
+                        ? sortedCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)
+                        : sortedSubcategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)
+                      }
+                    </select>
+                  </div>
+                  
+                  <div className="text-center">
+                    <span className="text-slate-500 text-xs">— or —</span>
+                  </div>
+                  
+                  <button
+                    onClick={() => setIsCreatingNew(true)}
+                    className="w-full px-3 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-600/50 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Create New {showBulkMoveModal === 'category' ? 'Category' : 'Subcategory'}
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">
+                      New {showBulkMoveModal === 'category' ? 'Category' : 'Subcategory'} Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newItemName}
+                      onChange={(e) => setNewItemName(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder={`e.g., ${showBulkMoveModal === 'category' ? 'Cardiovascular' : 'Central Line'}`}
+                      autoFocus
+                    />
+                    {newItemName && (
+                      <p className="text-xs text-slate-500 mt-1">ID will be: {slugify(newItemName)}</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setIsCreatingNew(false);
+                        setNewItemName('');
+                      }}
+                      className="flex-1 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handleCreateNewForMove}
+                      disabled={!newItemName.trim()}
+                      className={`flex-1 px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                        !newItemName.trim()
+                          ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                          : 'bg-green-600 hover:bg-green-500 text-white'
+                      }`}
+                    >
+                      <PlusIcon className="w-4 h-4" />
+                      Create & Select
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 p-4 border-t border-slate-700">
+              <button
+                onClick={() => {
+                  setShowBulkMoveModal(null);
+                  setBulkMoveTargetId('');
+                  setIsCreatingNew(false);
+                  setNewItemName('');
+                }}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkMove}
+                disabled={!bulkMoveTargetId}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  !bulkMoveTargetId
+                    ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                    : 'bg-amber-600 hover:bg-amber-500 text-white'
+                }`}
+              >
+                Apply to {selectedProcedureIndices.size} Procedure(s)
               </button>
             </div>
           </div>
