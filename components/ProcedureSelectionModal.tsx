@@ -7,6 +7,7 @@ import { BackIcon } from './icons/BackIcon';
 import { ChevronIcon } from './icons/ChevronIcon';
 import { StarIcon } from './icons/StarIcon';
 import { ClockIcon } from './icons/ClockIcon';
+import { TrendingIcon } from './icons/TrendingIcon';
 
 interface ProcedureSelectionModalProps {
   isOpen: boolean;
@@ -59,6 +60,9 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     // Recents
     addToRecents,
     getRecentProcedures,
+    // Usage tracking
+    incrementUsage,
+    getMostUsedProcedures,
   } = useProcedureConfig();
   
   const [searchTokens, setSearchTokens] = useState<SearchToken[]>([]);
@@ -85,6 +89,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   const [showFavorites, setShowFavorites] = useState(true);
   const [showFavoriteCategories, setShowFavoriteCategories] = useState(true);
   const [showRecent, setShowRecent] = useState(true);
+  const [showMostUsed, setShowMostUsed] = useState(true);
 
 
   // Collect all unique tags from procedures
@@ -216,6 +221,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
       setActiveProcedure(procedure);
     } else {
       addToRecents(procedure.controlName);
+      incrementUsage(procedure.controlName);
       const selected = createSelectedProcedure(procedure, {});
       onSelect(selected, keepOpen);
     }
@@ -224,6 +230,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   const handleFieldSave = () => {
     if (activeProcedure) {
       addToRecents(activeProcedure.controlName);
+      incrementUsage(activeProcedure.controlName);
       const selected = createSelectedProcedure(activeProcedure, fieldValues);
       onSelect(selected, keepOpen);
       if (keepOpen) {
@@ -236,6 +243,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   const handleQuickOptionSelect = (option: string) => {
     if (activeProcedure && activeProcedure.fields.length === 1 && activeProcedure.fields[0].type === 'list') {
       addToRecents(activeProcedure.controlName);
+      incrementUsage(activeProcedure.controlName);
       const values = { [activeProcedure.fields[0].controlName]: option };
       const selected = createSelectedProcedure(activeProcedure, values);
       onSelect(selected, keepOpen);
@@ -901,12 +909,60 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           </div>
         )}
 
-        {/* Divider if we have any favorites or recents sections */}
+        {/* Most Used Procedures Section */}
+        {searchTokens.length === 0 && !inputValue.trim() && getMostUsedProcedures().length > 0 && (
+          <div className="mb-2">
+            <button
+              onClick={() => setShowMostUsed(!showMostUsed)}
+              className="w-full text-left font-semibold text-blue-400 flex items-center gap-2 sticky top-0 bg-slate-800 py-1 z-0 hover:text-blue-300 transition-colors"
+            >
+              <ChevronIcon 
+                className="w-4 h-4"
+                direction={showMostUsed ? 'down' : 'right'}
+              />
+              <TrendingIcon className="w-5 h-5" />
+              Most Used
+              <span className="text-sm font-normal text-blue-500">({getMostUsedProcedures().length})</span>
+            </button>
+            {showMostUsed && (
+              <ul className="space-y-0 pl-2 border-l border-blue-700/50 mt-1">
+                {getMostUsedProcedures().map(({ procedure, count }, index) => (
+                  <li key={`most-used-${procedure.controlName}-${index}`} className="flex items-center group">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(procedure.controlName); }}
+                      className={`p-1 mr-1 transition-all ${
+                        isFavorite(procedure.controlName) 
+                          ? 'text-amber-400 hover:text-amber-300' 
+                          : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
+                      }`}
+                      aria-label={isFavorite(procedure.controlName) ? "Remove from favorites" : "Add to favorites"}
+                    >
+                      <StarIcon className="h-4 w-4" filled={isFavorite(procedure.controlName)} />
+                    </button>
+                    <button
+                      onClick={() => handleProcedureClick(procedure)}
+                      className="flex-grow text-left py-1 px-1.5 rounded hover:bg-blue-500/10 transition-colors duration-200"
+                    >
+                      <span className="text-slate-300">{procedure.description}</span>
+                      <span className="ml-2 text-xs text-blue-400">({count}×)</span>
+                      <span className="ml-1 text-xs text-slate-500">
+                        {getCategoryName(procedure.categoryId)} › {getSubcategoryName(procedure.subcategoryId)}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {/* Divider if we have any favorites, recents, or most-used sections */}
         {searchTokens.length === 0 && !inputValue.trim() && (
           getFavoriteProcedures().length > 0 || 
           getFavoriteCategories().length > 0 || 
           getFavoriteSubcategories().length > 0 || 
-          getRecentProcedures().length > 0
+          getRecentProcedures().length > 0 ||
+          getMostUsedProcedures().length > 0
         ) && sortedCategoryIds.length > 0 && (
           <div className="border-t border-slate-700 my-2 pt-1">
             <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">All Procedures</p>

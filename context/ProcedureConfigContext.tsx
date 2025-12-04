@@ -12,6 +12,8 @@ const CATEGORY_FAVORITES_KEY = 'category-favorites';
 const SUBCATEGORY_FAVORITES_KEY = 'subcategory-favorites';
 const RECENTS_KEY = 'procedure-recents';
 const MAX_RECENTS = 10;
+const USAGE_COUNTS_KEY = 'procedure-usage-counts';
+const MAX_MOST_USED = 20;
 
 /**
  * Load config from localStorage if available, otherwise return null
@@ -160,6 +162,33 @@ function saveRecents(recents: string[]): void {
 }
 
 /**
+ * Load usage counts from localStorage (controlName -> count mapping)
+ */
+function loadUsageCounts(): Record<string, number> {
+  try {
+    const stored = localStorage.getItem(USAGE_COUNTS_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return typeof parsed === 'object' && parsed !== null ? parsed : {};
+    }
+  } catch (e) {
+    console.warn('Failed to load usage counts from localStorage:', e);
+  }
+  return {};
+}
+
+/**
+ * Save usage counts to localStorage
+ */
+function saveUsageCounts(counts: Record<string, number>): void {
+  try {
+    localStorage.setItem(USAGE_COUNTS_KEY, JSON.stringify(counts));
+  } catch (e) {
+    console.warn('Failed to save usage counts to localStorage:', e);
+  }
+}
+
+/**
  * Get initial config: try localStorage first, fall back to default
  */
 function getInitialConfig(): ProcedureConfig {
@@ -282,6 +311,18 @@ interface ProcedureConfigContextType {
   getRecentProcedures: () => ProcedureDefinition[];
   /** Clear all recents */
   clearRecents: () => void;
+  
+  // Usage tracking (most used)
+  /** Map of procedure controlNames to usage counts */
+  usageCounts: Record<string, number>;
+  /** Increment usage count for a procedure */
+  incrementUsage: (controlName: string) => void;
+  /** Get top N most used procedures with their counts */
+  getMostUsedProcedures: () => Array<{ procedure: ProcedureDefinition; count: number }>;
+  /** Get usage count for a specific procedure */
+  getUsageCount: (controlName: string) => number;
+  /** Clear all usage data */
+  clearUsageCounts: () => void;
 }
 
 const ProcedureConfigContext = createContext<ProcedureConfigContextType | null>(null);
@@ -301,6 +342,7 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
   const [categoryFavorites, setCategoryFavorites] = useState<Set<string>>(loadCategoryFavorites);
   const [subcategoryFavorites, setSubcategoryFavorites] = useState<Set<string>>(loadSubcategoryFavorites);
   const [recentControlNames, setRecentControlNames] = useState<string[]>(loadRecents);
+  const [usageCounts, setUsageCounts] = useState<Record<string, number>>(loadUsageCounts);
 
   // Save to localStorage whenever config changes
   useEffect(() => {
@@ -588,6 +630,37 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
     saveRecents([]);
   }, []);
 
+  // Usage tracking (most used)
+  const incrementUsage = useCallback((controlName: string) => {
+    setUsageCounts(prev => {
+      const next = { ...prev, [controlName]: (prev[controlName] || 0) + 1 };
+      saveUsageCounts(next);
+      return next;
+    });
+  }, []);
+
+  const getMostUsedProcedures = useCallback(() => {
+    const procedureMap = new Map(config.procedures.map(p => [p.controlName, p]));
+    
+    return (Object.entries(usageCounts) as [string, number][])
+      .filter(([controlName]) => procedureMap.has(controlName))
+      .sort((a, b) => b[1] - a[1]) // Sort by count descending
+      .slice(0, MAX_MOST_USED)
+      .map(([controlName, count]) => ({
+        procedure: procedureMap.get(controlName)!,
+        count
+      }));
+  }, [config.procedures, usageCounts]);
+
+  const getUsageCount = useCallback((controlName: string) => {
+    return usageCounts[controlName] || 0;
+  }, [usageCounts]);
+
+  const clearUsageCounts = useCallback(() => {
+    setUsageCounts({});
+    saveUsageCounts({});
+  }, []);
+
   return (
     <ProcedureConfigContext.Provider
       value={{
@@ -647,6 +720,12 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
         addToRecents,
         getRecentProcedures,
         clearRecents,
+        
+        usageCounts,
+        incrementUsage,
+        getMostUsedProcedures,
+        getUsageCount,
+        clearUsageCounts,
       }}
     >
       {children}
