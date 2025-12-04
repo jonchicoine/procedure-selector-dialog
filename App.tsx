@@ -9,7 +9,7 @@ import { EditIcon } from './components/icons/EditIcon';
 import { GearIcon } from './components/icons/GearIcon';
 
 const App: React.FC = () => {
-  const { error, clearError } = useProcedureConfig();
+  const { error, clearError, getCategoryName, getSubcategoryName } = useProcedureConfig();
   
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -145,8 +145,8 @@ const App: React.FC = () => {
                       className="bg-slate-800 border-b border-slate-700 hover:bg-slate-700/50"
                       title={`Control Name: ${proc.controlName}`}
                     >
-                      <td className="px-6 py-4">{proc.category}</td>
-                      <td className="px-6 py-4">{proc.subcategory || 'N/A'}</td>
+                      <td className="px-6 py-4">{getCategoryName(proc.categoryId)}</td>
+                      <td className="px-6 py-4">{getSubcategoryName(proc.subcategoryId) || 'N/A'}</td>
                       <td className="px-6 py-4 font-medium text-white">{proc.description}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{proc.date}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{proc.physician}</td>
@@ -187,6 +187,8 @@ const App: React.FC = () => {
         isOpen={isSelectionModalOpen}
         onClose={() => setIsSelectionModalOpen(false)}
         onSelect={handleSelectProcedure}
+        currentDate={currentDate}
+        currentPhysician={currentPhysician}
       />
 
       <EditProcedureModal

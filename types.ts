@@ -1,4 +1,3 @@
-
 // Legacy interface - kept for backward compatibility during migration
 export interface Procedure {
   category: string;
@@ -9,7 +8,37 @@ export interface Procedure {
 }
 
 // ============================================
-// New Configurable Procedure Definition Types
+// Category and Subcategory Definition Types
+// ============================================
+
+/**
+ * Defines a category for grouping procedures.
+ * Categories are shared entities that procedures reference by ID.
+ */
+export interface CategoryDefinition {
+  /** Unique identifier for this category (e.g., "gastrointestinal") */
+  id: string;
+  /** Display name for the category (e.g., "Gastrointestinal") */
+  name: string;
+  /** Display order for sorting (lower numbers appear first) */
+  sortOrder: number;
+}
+
+/**
+ * Defines a subcategory for secondary grouping within categories.
+ * Subcategories can be shared across multiple categories.
+ */
+export interface SubcategoryDefinition {
+  /** Unique identifier for this subcategory (e.g., "foreign-body-removal") */
+  id: string;
+  /** Display name for the subcategory (e.g., "Foreign Body Removal") */
+  name: string;
+  /** Display order for sorting within a category (lower numbers appear first) */
+  sortOrder: number;
+}
+
+// ============================================
+// Configurable Procedure Definition Types
 // ============================================
 
 /**
@@ -33,10 +62,10 @@ export interface ProcedureFieldDefinition {
  * Procedures with fields show a form to capture input values.
  */
 export interface ProcedureDefinition {
-  /** Primary category for grouping */
-  category: string;
-  /** Secondary grouping within category */
-  subcategory: string;
+  /** Reference to category by ID */
+  categoryId: string;
+  /** Reference to subcategory by ID */
+  subcategoryId: string;
   /** Human-readable procedure name */
   description: string;
   /** Control name identifier for the procedure itself */
@@ -51,6 +80,10 @@ export interface ProcedureDefinition {
 export interface ProcedureConfig {
   /** Schema version for future compatibility */
   version: string;
+  /** List of all category definitions */
+  categories: CategoryDefinition[];
+  /** List of all subcategory definitions */
+  subcategories: SubcategoryDefinition[];
   /** List of all procedure definitions */
   procedures: ProcedureDefinition[];
 }
@@ -62,10 +95,13 @@ export interface ProcedureConfig {
 export interface SelectedProcedure {
   /** Unique identifier for this selection instance */
   id: string;
-  /** Reference to the procedure definition */
-  category: string;
-  subcategory: string;
+  /** Reference to the category by ID */
+  categoryId: string;
+  /** Reference to the subcategory by ID */
+  subcategoryId: string;
+  /** Human-readable procedure name */
   description: string;
+  /** Control name identifier for the procedure itself */
   controlName: string;
   /** Copy of field definitions for this procedure */
   fields: ProcedureFieldDefinition[];

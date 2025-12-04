@@ -13,6 +13,7 @@ interface ProcedureSelectionModalProps {
   currentPhysician: string;
 }
 
+// Grouped by categoryId, then subcategoryId
 type GroupedProcedures = Record<string, Record<string, ProcedureDefinition[]>>;
 
 export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = ({ 
@@ -22,7 +23,14 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   currentDate,
   currentPhysician,
 }) => {
-  const { procedures } = useProcedureConfig();
+  const { 
+    procedures, 
+    getCategoryName, 
+    getSubcategoryName,
+    getCategoryById,
+    getSubcategoryById,
+    getSortedCategories,
+  } = useProcedureConfig();
   
   const [searchTokens, setSearchTokens] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -105,8 +113,8 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
 
     return {
       id: `${procedure.controlName}-${Date.now()}`,
-      category: procedure.category,
-      subcategory: procedure.subcategory,
+      categoryId: procedure.categoryId,
+      subcategoryId: procedure.subcategoryId,
       description: procedure.description,
       controlName: procedure.controlName,
       fields: procedure.fields,
@@ -258,33 +266,63 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     }
 
     return procedures.filter((proc) => {
-      const searchSpace = `${proc.category} ${proc.subcategory} ${proc.description}`.toLowerCase();
+      // Search by resolved names (display names) rather than IDs
+      const categoryName = getCategoryName(proc.categoryId);
+      const subcategoryName = getSubcategoryName(proc.subcategoryId);
+      const searchSpace = `${categoryName} ${subcategoryName} ${proc.description}`.toLowerCase();
       return allTokens.every(token => searchSpace.includes(token));
     });
-  }, [procedures, searchTokens, inputValue]);
+  }, [procedures, searchTokens, inputValue, getCategoryName, getSubcategoryName]);
 
+  // Group procedures by categoryId, then subcategoryId
   const groupedProcedures = useMemo(() => {
     return filteredProcedures.reduce((acc, procedure) => {
-      const { category, subcategory } = procedure;
-      if (!acc[category]) {
-        acc[category] = {};
+      const { categoryId, subcategoryId } = procedure;
+      if (!acc[categoryId]) {
+        acc[categoryId] = {};
       }
-      const finalSubcategory = subcategory || 'General';
-      if (!acc[category][finalSubcategory]) {
-        acc[category][finalSubcategory] = [];
+      const finalSubcategoryId = subcategoryId || 'general';
+      if (!acc[categoryId][finalSubcategoryId]) {
+        acc[categoryId][finalSubcategoryId] = [];
       }
-      acc[category][finalSubcategory].push(procedure);
+      acc[categoryId][finalSubcategoryId].push(procedure);
       return acc;
     }, {} as GroupedProcedures);
   }, [filteredProcedures]);
 
+  // Get sorted category IDs based on their sortOrder
+  const sortedCategoryIds = useMemo(() => {
+    const categoryIds = Object.keys(groupedProcedures);
+    return categoryIds.sort((a, b) => {
+      const catA = getCategoryById(a);
+      const catB = getCategoryById(b);
+      const orderA = catA?.sortOrder ?? 999999;
+      const orderB = catB?.sortOrder ?? 999999;
+      return orderA - orderB;
+    });
+  }, [groupedProcedures, getCategoryById]);
+
+  // Get sorted subcategory IDs for a given category
+  const getSortedSubcategoryIds = (subcategories: Record<string, ProcedureDefinition[]>) => {
+    const subcategoryIds = Object.keys(subcategories);
+    return subcategoryIds.sort((a, b) => {
+      const subA = getSubcategoryById(a);
+      const subB = getSubcategoryById(b);
+      const orderA = subA?.sortOrder ?? 999999;
+      const orderB = subB?.sortOrder ?? 999999;
+      return orderA - orderB;
+    });
+  };
+
   const suggestions = useMemo(() => {
-    const currentCats = new Set<string>();
-    const currentSubcats = new Set<string>();
+    const currentCatNames = new Set<string>();
+    const currentSubcatNames = new Set<string>();
 
     filteredProcedures.forEach(p => {
-      if (p.category) currentCats.add(p.category);
-      if (p.subcategory) currentSubcats.add(p.subcategory);
+      const catName = getCategoryName(p.categoryId);
+      const subcatName = getSubcategoryName(p.subcategoryId);
+      if (catName) currentCatNames.add(catName);
+      if (subcatName) currentSubcatNames.add(subcatName);
     });
 
     const isUnfiltered = searchTokens.length === 0 && !inputValue.trim();
@@ -294,11 +332,12 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     let candidates: string[] = [];
 
     if (isUnfiltered) {
-      candidates = Array.from(currentCats).sort();
+      // Show categories sorted by sortOrder when unfiltered
+      candidates = getSortedCategories().map(c => c.name);
     } else {
-      const catsArray = Array.from(currentCats).sort();
+      const catsArray = Array.from(currentCatNames).sort();
       const usefulCats = catsArray.length > 1 ? catsArray : []; 
-      const subcatsArray = Array.from(currentSubcats).sort();
+      const subcatsArray = Array.from(currentSubcatNames).sort();
       candidates = [...usefulCats, ...subcatsArray];
     }
 
@@ -318,7 +357,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     }
     
     return filtered.slice(0, 30); // Limit to 30 to prevent UI clutter
-  }, [filteredProcedures, searchTokens, inputValue]);
+  }, [filteredProcedures, searchTokens, inputValue, getCategoryName, getSubcategoryName, getSortedCategories]);
 
   const addToken = (token: string) => {
     setSearchTokens(prev => {
@@ -438,38 +477,45 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
         )}
       </div>
       <div className="flex-grow overflow-y-auto px-4 pb-4">
-        {Object.keys(groupedProcedures).length > 0 ? (
-          Object.entries(groupedProcedures)
-            .sort(([catA], [catB]) => catA.localeCompare(catB))
-            .map(([category, subcategories]) => (
-            <div key={category} className="mb-4">
-              <h3 className="text-lg font-semibold text-slate-400 mb-2 sticky top-0 bg-slate-800 py-3 z-0">{category}</h3>
-              {Object.entries(subcategories)
-                .sort(([subA], [subB]) => subA.localeCompare(subB))
-                .map(([subcategory, procs]) => (
-                <div key={subcategory} className="mb-3 pl-2">
-                   <h4 className="font-semibold text-cyan-400 mb-2">{subcategory}</h4>
-                   <ul className="space-y-1 pl-2 border-l border-slate-700">
-                    {[...procs]
-                        .sort((a, b) => a.description.localeCompare(b.description))
-                        .map((proc, index) => (
-                      <li key={`${proc.controlName}-${index}`}>
-                        <button
-                          onClick={() => handleProcedureClick(proc)}
-                          className="w-full text-left p-2 rounded-md hover:bg-cyan-500/10 transition-colors duration-200"
-                        >
-                          <span className="text-slate-300">{proc.description}</span>
-                          {proc.fields.length === 0 && (
-                            <span className="ml-2 text-xs text-slate-500">(quick add)</span>
-                          )}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ))
+        {sortedCategoryIds.length > 0 ? (
+          sortedCategoryIds.map((categoryId) => {
+            const subcategories = groupedProcedures[categoryId];
+            const categoryName = getCategoryName(categoryId);
+            const sortedSubcategoryIds = getSortedSubcategoryIds(subcategories);
+            
+            return (
+              <div key={categoryId} className="mb-4">
+                <h3 className="text-lg font-semibold text-slate-400 mb-2 sticky top-0 bg-slate-800 py-3 z-0">{categoryName}</h3>
+                {sortedSubcategoryIds.map((subcategoryId) => {
+                  const procs = subcategories[subcategoryId];
+                  const subcategoryName = getSubcategoryName(subcategoryId);
+                  
+                  return (
+                    <div key={subcategoryId} className="mb-3 pl-2">
+                      <h4 className="font-semibold text-cyan-400 mb-2">{subcategoryName}</h4>
+                      <ul className="space-y-1 pl-2 border-l border-slate-700">
+                        {[...procs]
+                          .sort((a, b) => a.description.localeCompare(b.description))
+                          .map((proc, index) => (
+                            <li key={`${proc.controlName}-${index}`}>
+                              <button
+                                onClick={() => handleProcedureClick(proc)}
+                                className="w-full text-left p-2 rounded-md hover:bg-cyan-500/10 transition-colors duration-200"
+                              >
+                                <span className="text-slate-300">{proc.description}</span>
+                                {proc.fields.length === 0 && (
+                                  <span className="ml-2 text-xs text-slate-500">(quick add)</span>
+                                )}
+                              </button>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })
         ) : (
           <div className="text-center py-10 text-slate-500" role="status">
             <p className="font-semibold">No procedures found</p>
