@@ -71,7 +71,6 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   const [keepOpen, setKeepOpen] = useState(false);
   const [preserveFilters, setPreserveFilters] = useState(false);
   const [filterOnExpand, setFilterOnExpand] = useState(true);
-  const [catOnly, setCatOnly] = useState(false);
   const [flatView, setFlatView] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -590,26 +589,9 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
       });
       const catsArray = sortedCatIds.map(id => getCategoryName(id));
       
-      // Determine which suggestions to show based on catOnly toggle
-      let usefulCats: string[] = [];
-      let usefulSubcats: string[] = [];
-      
-      if (catOnly) {
-        // When catOnly is ON:
-        // - Show categories if there are multiple (to help narrow down)
-        // - Only show subcategories when narrowed to 1 category
-        if (currentCatIds.size > 1) {
-          usefulCats = catsArray;
-          usefulSubcats = []; // Hide subcategories until narrowed to 1 category
-        } else {
-          usefulCats = []; // No need to show the single category
-          usefulSubcats = subcatsArray; // Show subcategories for the single category
-        }
-      } else {
-        // When OFF: show both categories and subcategories
-        usefulCats = catsArray.length > 1 ? catsArray : [];
-        usefulSubcats = subcatsArray;
-      }
+      // Show both categories and subcategories
+      const usefulCats = catsArray.length > 1 ? catsArray : [];
+      const usefulSubcats = subcatsArray;
       
       // Categories first (for narrowing down), then subcategories (more specific)
       candidates = [...usefulCats, ...usefulSubcats];
@@ -631,7 +613,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     }
     
     return filtered.slice(0, 30); // Limit to 30 to prevent UI clutter
-  }, [filteredProcedures, searchTokens, inputValue, getCategoryName, getSubcategoryName, getSortedCategories, getCategoryById, getSubcategoryById, catOnly]);
+  }, [filteredProcedures, searchTokens, inputValue, getCategoryName, getSubcategoryName, getSortedCategories, getCategoryById, getSubcategoryById]);
 
   const addToken = (token: string, type?: TokenType) => {
     const tokenType = type ?? getTokenType(token);
@@ -1447,25 +1429,17 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           </div>
           
           <div className="flex items-center gap-3 flex-shrink-0">
-            <label className="flex items-center space-x-2 text-sm text-slate-400 hover:text-white cursor-pointer select-none group" title="Auto-filter when expanding categories/subcategories">
-              <input 
-                type="checkbox" 
-                checked={filterOnExpand} 
-                onChange={(e) => setFilterOnExpand(e.target.checked)}
-                className="appearance-none h-4 w-4 bg-slate-700 border border-slate-600 rounded checked:bg-cyan-500 checked:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all cursor-pointer relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[5px] after:top-[1px] after:w-[5px] after:h-[9px] after:border-r-2 after:border-b-2 after:border-white after:rotate-45"
-              />
-              <span className="group-hover:text-cyan-300 transition-colors whitespace-nowrap hidden sm:inline">Auto-filter</span>
-            </label>
-
-            <label className="flex items-center space-x-2 text-sm text-slate-400 hover:text-white cursor-pointer select-none group" title="Only show category suggestions until narrowed to one category">
-              <input 
-                type="checkbox" 
-                checked={catOnly} 
-                onChange={(e) => setCatOnly(e.target.checked)}
-                className="appearance-none h-4 w-4 bg-slate-700 border border-slate-600 rounded checked:bg-cyan-500 checked:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all cursor-pointer relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[5px] after:top-[1px] after:w-[5px] after:h-[9px] after:border-r-2 after:border-b-2 after:border-white after:rotate-45"
-              />
-              <span className="group-hover:text-cyan-300 transition-colors whitespace-nowrap hidden sm:inline">Cat only</span>
-            </label>
+            {!flatView && (
+              <label className="flex items-center space-x-2 text-sm text-slate-400 hover:text-white cursor-pointer select-none group" title="Auto-filter when expanding categories/subcategories">
+                <input 
+                  type="checkbox" 
+                  checked={filterOnExpand} 
+                  onChange={(e) => setFilterOnExpand(e.target.checked)}
+                  className="appearance-none h-4 w-4 bg-slate-700 border border-slate-600 rounded checked:bg-cyan-500 checked:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all cursor-pointer relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[5px] after:top-[1px] after:w-[5px] after:h-[9px] after:border-r-2 after:border-b-2 after:border-white after:rotate-45"
+                />
+                <span className="group-hover:text-cyan-300 transition-colors whitespace-nowrap hidden sm:inline">Auto-filter</span>
+              </label>
+            )}
 
             <label className="flex items-center space-x-2 text-sm text-slate-400 hover:text-white cursor-pointer select-none group" title="Display results as a flat list with Category, Subcategory, and Description on one row">
               <input 
