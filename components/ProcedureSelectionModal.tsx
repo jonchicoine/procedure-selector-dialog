@@ -1103,9 +1103,12 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                       onClick={() => handleProcedureClick(proc)}
                       className="flex-grow text-left py-1.5 px-2 rounded flex items-center gap-2 min-w-0"
                     >
-                      <span className="text-slate-300 truncate flex-grow">{proc.description}</span>
                       <span className="bg-cyan-700/50 text-cyan-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
                         {getSubcategoryName(proc.subcategoryId)}
+                      </span>
+                      <span className="text-slate-300 truncate flex-grow">{proc.description}</span>
+                      <span className="bg-purple-700/50 text-purple-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
+                        {getCategoryName(proc.categoryId)}
                       </span>
                       {tooltip && (
                         <span 
