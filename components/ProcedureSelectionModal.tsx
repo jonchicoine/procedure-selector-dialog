@@ -5,6 +5,8 @@ import { SearchIcon } from './icons/SearchIcon';
 import { CloseIcon } from './icons/CloseIcon';
 import { BackIcon } from './icons/BackIcon';
 import { ChevronIcon } from './icons/ChevronIcon';
+import { StarIcon } from './icons/StarIcon';
+import { ClockIcon } from './icons/ClockIcon';
 
 interface ProcedureSelectionModalProps {
   isOpen: boolean;
@@ -18,7 +20,7 @@ interface ProcedureSelectionModalProps {
 type GroupedProcedures = Record<string, Record<string, ProcedureDefinition[]>>;
 
 // Token types for search filters
-type TokenType = 'category' | 'subcategory' | 'text';
+type TokenType = 'category' | 'subcategory' | 'tag' | 'text';
 
 interface SearchToken {
   value: string;
@@ -41,6 +43,13 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     getCategoryById,
     getSubcategoryById,
     getSortedCategories,
+    // Favorites
+    isFavorite,
+    toggleFavorite,
+    getFavoriteProcedures,
+    // Recents
+    addToRecents,
+    getRecentProcedures,
   } = useProcedureConfig();
   
   const [searchTokens, setSearchTokens] = useState<SearchToken[]>([]);
@@ -60,7 +69,22 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   
   // State for tracking expanded categories
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  
+  // State for filter section visibility
+  const [showCategoryFilters, setShowCategoryFilters] = useState(false);
+  const [showBodyPartFilters, setShowBodyPartFilters] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(true);
+  const [showRecent, setShowRecent] = useState(true);
 
+
+  // Collect all unique tags from procedures
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    procedures.forEach(proc => {
+      proc.tags?.forEach(tag => tagSet.add(tag.toLowerCase()));
+    });
+    return Array.from(tagSet).sort();
+  }, [procedures]);
 
   // Helper to determine token type from a value
   const getTokenType = (value: string): TokenType => {
@@ -72,6 +96,10 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     // Check if it matches a subcategory name
     if (subcategories.some(s => s.name.toLowerCase() === lowerValue)) {
       return 'subcategory';
+    }
+    // Check if it matches a tag
+    if (allTags.includes(lowerValue)) {
+      return 'tag';
     }
     return 'text';
   };
@@ -177,6 +205,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     if (procedure.fields && procedure.fields.length > 0) {
       setActiveProcedure(procedure);
     } else {
+      addToRecents(procedure.controlName);
       const selected = createSelectedProcedure(procedure, {});
       onSelect(selected, keepOpen);
     }
@@ -184,6 +213,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
 
   const handleFieldSave = () => {
     if (activeProcedure) {
+      addToRecents(activeProcedure.controlName);
       const selected = createSelectedProcedure(activeProcedure, fieldValues);
       onSelect(selected, keepOpen);
       if (keepOpen) {
@@ -195,6 +225,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
 
   const handleQuickOptionSelect = (option: string) => {
     if (activeProcedure && activeProcedure.fields.length === 1 && activeProcedure.fields[0].type === 'list') {
+      addToRecents(activeProcedure.controlName);
       const values = { [activeProcedure.fields[0].controlName]: option };
       const selected = createSelectedProcedure(activeProcedure, values);
       onSelect(selected, keepOpen);
@@ -318,7 +349,10 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
       // Search by resolved names (display names) rather than IDs
       const categoryName = getCategoryName(proc.categoryId);
       const subcategoryName = getSubcategoryName(proc.subcategoryId);
-      const searchSpace = `${categoryName} ${subcategoryName} ${proc.description}`.toLowerCase();
+      // Include aliases and tags in search space
+      const aliasesStr = proc.aliases?.join(' ') || '';
+      const tagsStr = proc.tags?.join(' ') || '';
+      const searchSpace = `${categoryName} ${subcategoryName} ${proc.description} ${aliasesStr} ${tagsStr}`.toLowerCase();
       return allTokenValues.every(token => searchSpace.includes(token));
     });
   }, [procedures, searchTokens, inputValue, getCategoryName, getSubcategoryName]);
@@ -362,6 +396,27 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
       return orderA - orderB;
     });
   };
+
+  // Collect tags from currently filtered procedures for the body part filter
+  const relevantTags = useMemo(() => {
+    const tagCount = new Map<string, number>();
+    filteredProcedures.forEach(proc => {
+      proc.tags?.forEach(tag => {
+        const lowerTag = tag.toLowerCase();
+        tagCount.set(lowerTag, (tagCount.get(lowerTag) || 0) + 1);
+      });
+    });
+    
+    // Filter out tags that are already in search tokens
+    const existingTokens = new Set(searchTokens.map(t => t.value.toLowerCase()));
+    
+    // Sort by count (most common first), then alphabetically
+    return Array.from(tagCount.entries())
+      .filter(([tag]) => !existingTokens.has(tag))
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 15) // Limit to top 15 tags
+      .map(([tag, count]) => ({ tag, count }));
+  }, [filteredProcedures, searchTokens]);
 
   const suggestions = useMemo(() => {
     // Collect category and subcategory IDs from filtered procedures
@@ -504,19 +559,22 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           </div>
           
           {searchTokens.map((token, idx) => {
-            const typeStyles = {
+            const typeStyles: Record<TokenType, string> = {
               category: 'bg-purple-900/40 border-purple-700/50 text-purple-200',
               subcategory: 'bg-cyan-900/40 border-cyan-700/50 text-cyan-200',
+              tag: 'bg-emerald-900/40 border-emerald-700/50 text-emerald-200',
               text: 'bg-slate-700/60 border-slate-600/50 text-slate-200',
             };
-            const typeLabel = {
+            const typeLabel: Record<TokenType, string> = {
               category: 'CAT',
               subcategory: 'SUB',
+              tag: 'BODY',
               text: '',
             };
-            const typeLabelStyles = {
+            const typeLabelStyles: Record<TokenType, string> = {
               category: 'bg-purple-700/50 text-purple-200',
               subcategory: 'bg-cyan-700/50 text-cyan-200',
+              tag: 'bg-emerald-700/50 text-emerald-200',
               text: '',
             };
             return (
@@ -567,51 +625,192 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
 
         {suggestions.length > 0 && (
           <div className="mt-3">
-             <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider font-semibold">Refine by:</p>
-             <div className="flex flex-wrap gap-2">
-              {suggestions.map(s => {
-                const suggestionType = getTokenType(s);
-                const isCategory = suggestionType === 'category';
-                const isSubcategory = suggestionType === 'subcategory';
-                const badgeStyles = isCategory 
-                  ? 'bg-purple-700/50 text-purple-200' 
-                  : isSubcategory 
-                    ? 'bg-cyan-700/50 text-cyan-200' 
-                    : '';
-                const buttonStyles = isCategory
-                  ? 'bg-purple-900/30 border-purple-700/50 hover:bg-purple-900/50 hover:border-purple-500/50'
-                  : isSubcategory
-                    ? 'bg-cyan-900/30 border-cyan-700/50 hover:bg-cyan-900/50 hover:border-cyan-500/50'
-                    : 'bg-slate-700/50 border-slate-600/50 hover:bg-cyan-900/40 hover:border-cyan-500/50';
-                const textStyles = isCategory
-                  ? 'text-purple-200 hover:text-purple-100'
-                  : isSubcategory
-                    ? 'text-cyan-200 hover:text-cyan-100'
-                    : 'text-slate-300 hover:text-cyan-400';
-                
-                return (
+            <button
+              onClick={() => setShowCategoryFilters(!showCategoryFilters)}
+              className="flex items-center gap-2 text-xs text-slate-400 hover:text-slate-200 uppercase tracking-wider font-semibold transition-colors"
+            >
+              <ChevronIcon 
+                className="w-3 h-3"
+                direction={showCategoryFilters ? 'down' : 'right'}
+              />
+              Refine by Category
+              <span className="text-slate-500 normal-case font-normal">({suggestions.length})</span>
+            </button>
+            {showCategoryFilters && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {suggestions.map(s => {
+                  const suggestionType = getTokenType(s);
+                  const isCategory = suggestionType === 'category';
+                  const isSubcategory = suggestionType === 'subcategory';
+                  const badgeStyles = isCategory 
+                    ? 'bg-purple-700/50 text-purple-200' 
+                    : isSubcategory 
+                      ? 'bg-cyan-700/50 text-cyan-200' 
+                      : '';
+                  const buttonStyles = isCategory
+                    ? 'bg-purple-900/30 border-purple-700/50 hover:bg-purple-900/50 hover:border-purple-500/50'
+                    : isSubcategory
+                      ? 'bg-cyan-900/30 border-cyan-700/50 hover:bg-cyan-900/50 hover:border-cyan-500/50'
+                      : 'bg-slate-700/50 border-slate-600/50 hover:bg-cyan-900/40 hover:border-cyan-500/50';
+                  const textStyles = isCategory
+                    ? 'text-purple-200 hover:text-purple-100'
+                    : isSubcategory
+                      ? 'text-cyan-200 hover:text-cyan-100'
+                      : 'text-slate-300 hover:text-cyan-400';
+                  
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => addToken(s, suggestionType)}
+                      className={`text-xs font-medium px-2 py-1.5 rounded-full border ${buttonStyles} ${textStyles} transition-all duration-200 flex items-center gap-1.5`}
+                    >
+                      {(isCategory || isSubcategory) && (
+                        <span className={`${badgeStyles} text-[10px] font-bold px-1.5 py-0.5 rounded-full`}>
+                          {isCategory ? 'CAT' : 'SUB'}
+                        </span>
+                      )}
+                      {!isCategory && !isSubcategory && (
+                        <span className="text-slate-500">+</span>
+                      )}
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Body Part / Anatomical Tags Filter */}
+        {relevantTags.length > 0 && (
+          <div className="mt-3">
+            <button
+              onClick={() => setShowBodyPartFilters(!showBodyPartFilters)}
+              className="flex items-center gap-2 text-xs text-slate-400 hover:text-slate-200 uppercase tracking-wider font-semibold transition-colors"
+            >
+              <ChevronIcon 
+                className="w-3 h-3"
+                direction={showBodyPartFilters ? 'down' : 'right'}
+              />
+              Filter by Body Part
+              <span className="text-slate-500 normal-case font-normal">({relevantTags.length})</span>
+            </button>
+            {showBodyPartFilters && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {relevantTags.map(({ tag, count }) => (
                   <button
-                    key={s}
-                    onClick={() => addToken(s, suggestionType)}
-                    className={`text-xs font-medium px-2 py-1.5 rounded-full border ${buttonStyles} ${textStyles} transition-all duration-200 flex items-center gap-1.5`}
+                    key={tag}
+                    onClick={() => addToken(tag, 'tag')}
+                    className="text-xs font-medium px-2 py-1.5 rounded-full border bg-emerald-900/30 border-emerald-700/50 hover:bg-emerald-900/50 hover:border-emerald-500/50 text-emerald-200 hover:text-emerald-100 transition-all duration-200 flex items-center gap-1.5"
                   >
-                    {(isCategory || isSubcategory) && (
-                      <span className={`${badgeStyles} text-[10px] font-bold px-1.5 py-0.5 rounded-full`}>
-                        {isCategory ? 'CAT' : 'SUB'}
-                      </span>
-                    )}
-                    {!isCategory && !isSubcategory && (
-                      <span className="text-slate-500">+</span>
-                    )}
-                    {s}
+                    <span className="bg-emerald-700/50 text-emerald-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                      BODY
+                    </span>
+                    {tag}
+                    <span className="text-emerald-400/60 text-[10px]">({count})</span>
                   </button>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
       <div className="flex-grow overflow-y-auto px-4 pb-4">
+        {/* Favorites Section */}
+        {searchTokens.length === 0 && !inputValue.trim() && getFavoriteProcedures().length > 0 && (
+          <div className="mb-4">
+            <button
+              onClick={() => setShowFavorites(!showFavorites)}
+              className="w-full text-left text-lg font-semibold text-amber-400 flex items-center gap-2 sticky top-0 bg-slate-800 py-3 z-0 hover:text-amber-300 transition-colors"
+            >
+              <ChevronIcon 
+                className="w-4 h-4"
+                direction={showFavorites ? 'down' : 'right'}
+              />
+              <StarIcon className="w-5 h-5" filled />
+              Favorites
+              <span className="text-sm font-normal text-amber-600">({getFavoriteProcedures().length})</span>
+            </button>
+            {showFavorites && (
+              <ul className="space-y-1 pl-2 border-l border-amber-700/50 mt-2">
+                {getFavoriteProcedures().map((proc, index) => (
+                  <li key={`fav-${proc.controlName}-${index}`} className="flex items-center group">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(proc.controlName); }}
+                      className="p-1.5 mr-1 text-amber-400 hover:text-amber-300 opacity-60 hover:opacity-100 transition-all"
+                      aria-label="Remove from favorites"
+                    >
+                      <StarIcon className="h-4 w-4" filled />
+                    </button>
+                    <button
+                      onClick={() => handleProcedureClick(proc)}
+                      className="flex-grow text-left p-2 rounded-md hover:bg-amber-500/10 transition-colors duration-200"
+                    >
+                      <span className="text-slate-300">{proc.description}</span>
+                      <span className="ml-2 text-xs text-slate-500">
+                        {getCategoryName(proc.categoryId)} › {getSubcategoryName(proc.subcategoryId)}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {/* Recent Procedures Section */}
+        {searchTokens.length === 0 && !inputValue.trim() && getRecentProcedures().length > 0 && (
+          <div className="mb-4">
+            <button
+              onClick={() => setShowRecent(!showRecent)}
+              className="w-full text-left text-lg font-semibold text-slate-400 flex items-center gap-2 sticky top-0 bg-slate-800 py-3 z-0 hover:text-slate-300 transition-colors"
+            >
+              <ChevronIcon 
+                className="w-4 h-4"
+                direction={showRecent ? 'down' : 'right'}
+              />
+              <ClockIcon className="w-5 h-5" />
+              Recent
+              <span className="text-sm font-normal text-slate-500">({getRecentProcedures().length})</span>
+            </button>
+            {showRecent && (
+              <ul className="space-y-1 pl-2 border-l border-slate-700 mt-2">
+                {getRecentProcedures().map((proc, index) => (
+                  <li key={`recent-${proc.controlName}-${index}`} className="flex items-center group">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(proc.controlName); }}
+                      className={`p-1.5 mr-1 transition-all ${
+                        isFavorite(proc.controlName) 
+                          ? 'text-amber-400 hover:text-amber-300' 
+                          : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
+                      }`}
+                      aria-label={isFavorite(proc.controlName) ? "Remove from favorites" : "Add to favorites"}
+                    >
+                      <StarIcon className="h-4 w-4" filled={isFavorite(proc.controlName)} />
+                    </button>
+                    <button
+                      onClick={() => handleProcedureClick(proc)}
+                      className="flex-grow text-left p-2 rounded-md hover:bg-cyan-500/10 transition-colors duration-200"
+                    >
+                      <span className="text-slate-300">{proc.description}</span>
+                      <span className="ml-2 text-xs text-slate-500">
+                        {getCategoryName(proc.categoryId)} › {getSubcategoryName(proc.subcategoryId)}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {/* Divider if we have favorites or recents */}
+        {searchTokens.length === 0 && !inputValue.trim() && (getFavoriteProcedures().length > 0 || getRecentProcedures().length > 0) && sortedCategoryIds.length > 0 && (
+          <div className="border-t border-slate-700 my-4 pt-2">
+            <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2">All Procedures</p>
+          </div>
+        )}
+
         {sortedCategoryIds.length > 0 ? (
           sortedCategoryIds.map((categoryId) => {
             const subcategories = groupedProcedures[categoryId];
@@ -718,10 +917,21 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                           {[...procs]
                             .sort((a, b) => a.description.localeCompare(b.description))
                             .map((proc, index) => (
-                              <li key={`${proc.controlName}-${index}`}>
+                              <li key={`${proc.controlName}-${index}`} className="flex items-center group">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); toggleFavorite(proc.controlName); }}
+                                  className={`p-1.5 mr-1 transition-all ${
+                                    isFavorite(proc.controlName) 
+                                      ? 'text-amber-400 hover:text-amber-300' 
+                                      : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
+                                  }`}
+                                  aria-label={isFavorite(proc.controlName) ? "Remove from favorites" : "Add to favorites"}
+                                >
+                                  <StarIcon className="h-4 w-4" filled={isFavorite(proc.controlName)} />
+                                </button>
                                 <button
                                   onClick={() => handleProcedureClick(proc)}
-                                  className="w-full text-left p-2 rounded-md hover:bg-cyan-500/10 transition-colors duration-200"
+                                  className="flex-grow text-left p-2 rounded-md hover:bg-cyan-500/10 transition-colors duration-200"
                                 >
                                   <span className="text-slate-300">{proc.description}</span>
                                   {proc.fields.length === 0 && (

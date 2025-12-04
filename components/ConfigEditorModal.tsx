@@ -33,6 +33,8 @@ const createEmptyProcedure = (categories: CategoryDefinition[], subcategories: S
   description: '',
   controlName: '',
   fields: [],
+  aliases: [],
+  tags: [],
 });
 
 const createEmptyCategory = (existingCategories: CategoryDefinition[]): CategoryDefinition => ({
@@ -177,7 +179,13 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
       }
     }
     setSelectedIndex(index);
-    setEditingProcedure({ ...procedures[index], fields: procedures[index].fields.map(f => ({ ...f, listItems: f.listItems ? [...f.listItems] : undefined })) });
+    const proc = procedures[index];
+    setEditingProcedure({ 
+      ...proc, 
+      fields: proc.fields.map(f => ({ ...f, listItems: f.listItems ? [...f.listItems] : undefined })),
+      aliases: proc.aliases ? [...proc.aliases] : [],
+      tags: proc.tags ? [...proc.tags] : [],
+    });
     setHasChanges(false);
     setIsAddingNew(false);
   };
@@ -424,7 +432,13 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
         setIsAddingNew(false);
         setHasChanges(false);
       } else if (selectedIndex !== null) {
-        setEditingProcedure({ ...procedures[selectedIndex], fields: procedures[selectedIndex].fields.map(f => ({ ...f, listItems: f.listItems ? [...f.listItems] : undefined })) });
+        const proc = procedures[selectedIndex];
+        setEditingProcedure({ 
+          ...proc, 
+          fields: proc.fields.map(f => ({ ...f, listItems: f.listItems ? [...f.listItems] : undefined })),
+          aliases: proc.aliases ? [...proc.aliases] : [],
+          tags: proc.tags ? [...proc.tags] : [],
+        });
         setHasChanges(false);
       }
     } else if (activeTab === 'categories') {
@@ -650,6 +664,49 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
                     onChange={(e) => updateProcedureField('controlName', e.target.value)}
                     className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white font-mono text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     placeholder="e.g., Procedures_CentralLine_cbo"
+                  />
+                </div>
+              </div>
+
+              {/* Search Helpers - Aliases & Tags */}
+              <div className="bg-slate-700/50 rounded-lg p-4 space-y-3">
+                <h4 className="text-sm font-medium text-slate-300 mb-3">Search Helpers</h4>
+                
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">
+                    Aliases <span className="text-slate-500">(abbreviations, alternative names - comma separated)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={(editingProcedure.aliases || []).join(', ')}
+                    onChange={(e) => {
+                      const aliases = e.target.value
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(s => s.length > 0);
+                      updateProcedureField('aliases', aliases.length > 0 ? aliases : undefined);
+                    }}
+                    className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    placeholder="e.g., LP, spinal tap, CSF"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">
+                    Tags <span className="text-slate-500">(body parts, conditions - comma separated)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={(editingProcedure.tags || []).join(', ')}
+                    onChange={(e) => {
+                      const tags = e.target.value
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(s => s.length > 0);
+                      updateProcedureField('tags', tags.length > 0 ? tags : undefined);
+                    }}
+                    className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    placeholder="e.g., spine, back, meningitis"
                   />
                 </div>
               </div>

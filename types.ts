@@ -72,6 +72,10 @@ export interface ProcedureDefinition {
   controlName: string;
   /** Input fields for this procedure. Empty array = immediate add, no form needed */
   fields: ProcedureFieldDefinition[];
+  /** Optional aliases for search (e.g., "LP" for "Lumbar Puncture") */
+  aliases?: string[];
+  /** Optional anatomical/contextual tags for search (e.g., "spine", "back") */
+  tags?: string[];
 }
 
 /**

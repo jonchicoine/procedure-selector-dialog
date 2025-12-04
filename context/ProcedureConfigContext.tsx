@@ -5,8 +5,11 @@ import { parseConfigJson, configToJson } from '../utils/migrateProcedures';
 // Import the default config
 import defaultConfig from '../procedures.json';
 
-// localStorage key for persisting config
+// localStorage keys for persisting data
 const STORAGE_KEY = 'procedure-config';
+const FAVORITES_KEY = 'procedure-favorites';
+const RECENTS_KEY = 'procedure-recents';
+const MAX_RECENTS = 10;
 
 /**
  * Load config from localStorage if available, otherwise return null
@@ -43,6 +46,60 @@ function clearStorage(): void {
     localStorage.removeItem(STORAGE_KEY);
   } catch (e) {
     console.warn('Failed to clear localStorage:', e);
+  }
+}
+
+/**
+ * Load favorites from localStorage (stored as array of controlNames)
+ */
+function loadFavorites(): Set<string> {
+  try {
+    const stored = localStorage.getItem(FAVORITES_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return new Set(Array.isArray(parsed) ? parsed : []);
+    }
+  } catch (e) {
+    console.warn('Failed to load favorites from localStorage:', e);
+  }
+  return new Set();
+}
+
+/**
+ * Save favorites to localStorage
+ */
+function saveFavorites(favorites: Set<string>): void {
+  try {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(favorites)));
+  } catch (e) {
+    console.warn('Failed to save favorites to localStorage:', e);
+  }
+}
+
+/**
+ * Load recent procedure controlNames from localStorage
+ */
+function loadRecents(): string[] {
+  try {
+    const stored = localStorage.getItem(RECENTS_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+  } catch (e) {
+    console.warn('Failed to load recents from localStorage:', e);
+  }
+  return [];
+}
+
+/**
+ * Save recents to localStorage
+ */
+function saveRecents(recents: string[]): void {
+  try {
+    localStorage.setItem(RECENTS_KEY, JSON.stringify(recents));
+  } catch (e) {
+    console.warn('Failed to save recents to localStorage:', e);
   }
 }
 
@@ -129,6 +186,26 @@ interface ProcedureConfigContextType {
   error: string | null;
   /** Clear any error message */
   clearError: () => void;
+  
+  // Favorites management
+  /** Set of favorited procedure controlNames */
+  favorites: Set<string>;
+  /** Check if a procedure is favorited */
+  isFavorite: (controlName: string) => boolean;
+  /** Toggle favorite status for a procedure */
+  toggleFavorite: (controlName: string) => void;
+  /** Get all favorited procedures */
+  getFavoriteProcedures: () => ProcedureDefinition[];
+  
+  // Recent procedures management
+  /** List of recently used procedure controlNames (most recent first) */
+  recentControlNames: string[];
+  /** Add a procedure to recents (called when selecting a procedure) */
+  addToRecents: (controlName: string) => void;
+  /** Get all recent procedures */
+  getRecentProcedures: () => ProcedureDefinition[];
+  /** Clear all recents */
+  clearRecents: () => void;
 }
 
 const ProcedureConfigContext = createContext<ProcedureConfigContextType | null>(null);
@@ -142,6 +219,10 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
   const [config, setConfig] = useState<ProcedureConfig>(getInitialConfig);
   const [error, setError] = useState<string | null>(null);
   const [hasStoredConfig, setHasStoredConfig] = useState(() => loadFromStorage() !== null);
+  
+  // Favorites and recents state
+  const [favorites, setFavorites] = useState<Set<string>>(loadFavorites);
+  const [recentControlNames, setRecentControlNames] = useState<string[]>(loadRecents);
 
   // Save to localStorage whenever config changes
   useEffect(() => {
@@ -335,6 +416,52 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
     setError(null);
   }, []);
 
+  // Favorites management
+  const isFavorite = useCallback((controlName: string) => {
+    return favorites.has(controlName);
+  }, [favorites]);
+
+  const toggleFavorite = useCallback((controlName: string) => {
+    setFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(controlName)) {
+        next.delete(controlName);
+      } else {
+        next.add(controlName);
+      }
+      saveFavorites(next);
+      return next;
+    });
+  }, []);
+
+  const getFavoriteProcedures = useCallback(() => {
+    return config.procedures.filter(p => favorites.has(p.controlName));
+  }, [config.procedures, favorites]);
+
+  // Recents management
+  const addToRecents = useCallback((controlName: string) => {
+    setRecentControlNames(prev => {
+      // Remove if already exists, then add to front
+      const filtered = prev.filter(cn => cn !== controlName);
+      const next = [controlName, ...filtered].slice(0, MAX_RECENTS);
+      saveRecents(next);
+      return next;
+    });
+  }, []);
+
+  const getRecentProcedures = useCallback(() => {
+    // Return procedures in order of recency
+    const procedureMap = new Map(config.procedures.map(p => [p.controlName, p]));
+    return recentControlNames
+      .map(cn => procedureMap.get(cn))
+      .filter((p): p is ProcedureDefinition => p !== undefined);
+  }, [config.procedures, recentControlNames]);
+
+  const clearRecents = useCallback(() => {
+    setRecentControlNames([]);
+    saveRecents([]);
+  }, []);
+
   return (
     <ProcedureConfigContext.Provider
       value={{
@@ -374,6 +501,16 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
         
         error,
         clearError,
+        
+        favorites,
+        isFavorite,
+        toggleFavorite,
+        getFavoriteProcedures,
+        
+        recentControlNames,
+        addToRecents,
+        getRecentProcedures,
+        clearRecents,
       }}
     >
       {children}

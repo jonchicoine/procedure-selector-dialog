@@ -395,14 +395,18 @@
       "subcategoryId": "ng-tube",
       "description": "NG w/lavage",
       "controlName": "Procedures01_NGWithLavage_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["NGT", "nasogastric", "gastric lavage"],
+      "tags": ["stomach", "gi", "tube"]
     },
     {
       "categoryId": "gastrointestinal",
       "subcategoryId": "ng-tube",
       "description": "NG w/suction",
       "controlName": "Procedures01_NGWithSuction_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["NGT", "nasogastric"],
+      "tags": ["stomach", "gi", "tube"]
     },
     {
       "categoryId": "gastrointestinal",
@@ -420,21 +424,27 @@
             "Peritoneal Lavage"
           ]
         }
-      ]
+      ],
+      "aliases": ["para", "abdominal tap", "ascites tap", "DPL"],
+      "tags": ["abdomen", "ascites", "fluid", "belly"]
     },
     {
       "categoryId": "gastrointestinal",
       "subcategoryId": "g-tube",
       "description": "G-tube Reposition",
       "controlName": "Procedures01_GTubeReposition_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["gastrostomy", "PEG"],
+      "tags": ["stomach", "feeding tube", "abdomen"]
     },
     {
       "categoryId": "gastrointestinal",
       "subcategoryId": "g-tube",
       "description": "G-tube Replacement",
       "controlName": "Procedures01_GTubeReplacement_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["gastrostomy", "PEG"],
+      "tags": ["stomach", "feeding tube", "abdomen"]
     },
     {
       "categoryId": "gastrointestinal",
@@ -462,14 +472,18 @@
       "subcategoryId": "foley-catheter",
       "description": "Foley Catheter Complex",
       "controlName": "Procedures01_FoleyCatheterComplex_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["urinary catheter", "indwelling catheter"],
+      "tags": ["bladder", "urine", "urinary"]
     },
     {
       "categoryId": "genitourinary",
       "subcategoryId": "foley-catheter",
       "description": "Foley Catheter Simple",
       "controlName": "Procedures01_FoleyCatheterSimple_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["urinary catheter", "indwelling catheter"],
+      "tags": ["bladder", "urine", "urinary"]
     },
     {
       "categoryId": "genitourinary",
@@ -497,7 +511,9 @@
       "subcategoryId": "arterial-access",
       "description": "Arterial Catheterization Insertion",
       "controlName": "Procedures01_ArterialCat_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["art line", "a-line", "arterial line"],
+      "tags": ["artery", "blood pressure", "monitoring"]
     },
     {
       "categoryId": "cardiovascular",
@@ -525,7 +541,9 @@
       "subcategoryId": "pericardial-procedures",
       "description": "Pericardiocentesis",
       "controlName": "Procedures01_Pericardiocentesis_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["pericardial tap", "cardiac tap"],
+      "tags": ["heart", "chest", "pericardium", "tamponade", "fluid"]
     },
     {
       "categoryId": "cardiovascular",
@@ -546,28 +564,36 @@
       "subcategoryId": "resuscitation",
       "description": "CPR",
       "controlName": "Procedures01_CPR_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["cardiopulmonary resuscitation", "code", "code blue", "ACLS", "chest compressions"],
+      "tags": ["cardiac arrest", "heart", "resus"]
     },
     {
       "categoryId": "cardiovascular",
       "subcategoryId": "central-line",
       "description": "Central Line >= 5 years old",
       "controlName": "Procedures01_CentralLineGTE5_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["CVC", "central venous catheter", "IJ", "subclavian", "femoral line"],
+      "tags": ["vein", "iv", "intravenous", "neck", "chest"]
     },
     {
       "categoryId": "cardiovascular",
       "subcategoryId": "central-line",
       "description": "Central line < 5 years old",
       "controlName": "Procedures01_CentralLineLT5_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["CVC", "central venous catheter", "IJ", "subclavian", "femoral line"],
+      "tags": ["vein", "iv", "intravenous", "neck", "chest", "pediatric"]
     },
     {
       "categoryId": "cardiovascular",
       "subcategoryId": "cardioversion",
       "description": "Cardioversion (Electric)",
       "controlName": "Procedures01_CardioversionElectric_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["shock", "synchronized cardioversion", "DCCV"],
+      "tags": ["heart", "rhythm", "afib", "aflutter", "arrhythmia"]
     },
     {
       "categoryId": "cardiovascular",
@@ -592,7 +618,9 @@
             "Bilateral"
           ]
         }
-      ]
+      ],
+      "aliases": ["thoracostomy", "tube thoracostomy", "pigtail"],
+      "tags": ["chest", "lung", "pneumothorax", "hemothorax", "trauma"]
     },
     {
       "categoryId": "pulmonary",
@@ -611,7 +639,9 @@
             "Thoracentesis with imaging guidance - bilateral"
           ]
         }
-      ]
+      ],
+      "aliases": ["tap", "pleural tap", "chest tap"],
+      "tags": ["chest", "lung", "pleural effusion", "fluid"]
     },
     {
       "categoryId": "pulmonary",
@@ -671,7 +701,9 @@
       "subcategoryId": "tracheostomy",
       "description": "Tracheostomy",
       "controlName": "Procedures01_Tracheostomy_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["trach", "trach tube", "tracheotomy"],
+      "tags": ["airway", "neck", "throat"]
     },
     {
       "categoryId": "pulmonary",
@@ -709,7 +741,9 @@
             "Anesthesia"
           ]
         }
-      ]
+      ],
+      "aliases": ["ETI", "RSI", "endotracheal", "ET tube", "oral intubation", "tube"],
+      "tags": ["airway", "breathing", "ventilator", "throat"]
     },
     {
       "categoryId": "pulmonary",
@@ -730,7 +764,9 @@
       "subcategoryId": "airway-management",
       "description": "Cricothyroidotomy",
       "controlName": "Procedures01_Cricothyroidotomy_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["cric", "surgical airway", "emergency airway"],
+      "tags": ["airway", "neck", "throat", "emergency"]
     },
     {
       "categoryId": "nose",
@@ -765,7 +801,9 @@
             "Complex-Bilateral"
           ]
         }
-      ]
+      ],
+      "aliases": ["epistaxis", "nosebleed", "nose bleed"],
+      "tags": ["nose", "bleeding", "nasal"]
     },
     {
       "categoryId": "nose",
@@ -819,7 +857,9 @@
             "Bilateral"
           ]
         }
-      ]
+      ],
+      "aliases": ["eye FB", "corneal FB", "rust ring"],
+      "tags": ["eye", "cornea", "foreign body"]
     },
     {
       "categoryId": "eye",
@@ -837,7 +877,9 @@
             "Bilateral"
           ]
         }
-      ]
+      ],
+      "aliases": ["eye FB", "corneal FB", "rust ring"],
+      "tags": ["eye", "cornea", "foreign body", "slit lamp"]
     },
     {
       "categoryId": "eye",
@@ -934,7 +976,9 @@
           "label": "Duration (in mins)",
           "controlName": "Procedures02_ProceduralSedationDuration_txt"
         }
-      ]
+      ],
+      "aliases": ["PSA", "conscious sedation", "moderate sedation", "propofol", "ketamine"],
+      "tags": ["sedation", "anesthesia", "pain"]
     },
     {
       "categoryId": "quality-indicators",
@@ -1004,7 +1048,9 @@
       "subcategoryId": "delivery",
       "description": "Cesarean Section",
       "controlName": "Procedures02_CesareanSection_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["C-section", "CS", "cesarean"],
+      "tags": ["pregnancy", "delivery", "abdomen", "surgery"]
     },
     {
       "categoryId": "special-procedures",
@@ -1018,7 +1064,9 @@
       "subcategoryId": "spinal-procedures",
       "description": "Lumbar Puncture",
       "controlName": "Procedures02_LumbarPuncture_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["LP", "spinal tap", "CSF"],
+      "tags": ["spine", "back", "cerebrospinal fluid", "meningitis"]
     },
     {
       "categoryId": "neurology",
@@ -1466,7 +1514,9 @@
             "Bilateral"
           ]
         }
-      ]
+      ],
+      "aliases": ["FB nose", "nasal FB", "nose FB"],
+      "tags": ["nose", "nasal", "foreign body"]
     },
     {
       "categoryId": "fb-id",
@@ -1484,7 +1534,9 @@
             "Bilateral"
           ]
         }
-      ]
+      ],
+      "aliases": ["FB ear", "ear FB"],
+      "tags": ["ear", "foreign body", "EAC", "external auditory canal"]
     },
     {
       "categoryId": "fb-id",
@@ -1711,7 +1763,9 @@
       "subcategoryId": "nails",
       "description": "Drain Subungual Hematoma",
       "controlName": "Surgical_FBID_Nails_DrainSubungualHematoma_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["nail hematoma", "trephination", "nail drainage"],
+      "tags": ["finger", "toe", "nail", "blood"]
     },
     {
       "categoryId": "fb-id",
@@ -1742,7 +1796,9 @@
             "Complex"
           ]
         }
-      ]
+      ],
+      "aliases": ["abscess", "paronychia", "felon"],
+      "tags": ["finger", "hand", "infection", "abscess", "drainage"]
     },
     {
       "categoryId": "fb-id",
@@ -1776,7 +1832,9 @@
             "Complex"
           ]
         }
-      ]
+      ],
+      "aliases": ["abscess", "boil", "furuncle", "carbuncle"],
+      "tags": ["skin", "infection", "abscess", "drainage"]
     },
     {
       "categoryId": "fb-id",
@@ -1980,7 +2038,9 @@
       "subcategoryId": "incision-and-drainage",
       "description": "Bartholin Cyst",
       "controlName": "Surgical_FBID_IncisionDrainage_BartholinCyst_chk",
-      "fields": []
+      "fields": [],
+      "aliases": ["bartholin abscess", "bartholin gland"],
+      "tags": ["vagina", "vulva", "gyn", "abscess"]
     },
     {
       "categoryId": "misc",
