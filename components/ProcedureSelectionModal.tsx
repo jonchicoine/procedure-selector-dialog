@@ -4,6 +4,7 @@ import { useProcedureConfig } from '../context/ProcedureConfigContext';
 import { SearchIcon } from './icons/SearchIcon';
 import { CloseIcon } from './icons/CloseIcon';
 import { BackIcon } from './icons/BackIcon';
+import { ChevronIcon } from './icons/ChevronIcon';
 
 interface ProcedureSelectionModalProps {
   isOpen: boolean;
@@ -16,6 +17,14 @@ interface ProcedureSelectionModalProps {
 // Grouped by categoryId, then subcategoryId
 type GroupedProcedures = Record<string, Record<string, ProcedureDefinition[]>>;
 
+// Token types for search filters
+type TokenType = 'category' | 'subcategory' | 'text';
+
+interface SearchToken {
+  value: string;
+  type: TokenType;
+}
+
 export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = ({ 
   isOpen, 
   onClose, 
@@ -25,6 +34,8 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
 }) => {
   const { 
     procedures, 
+    categories,
+    subcategories,
     getCategoryName, 
     getSubcategoryName,
     getCategoryById,
@@ -32,16 +43,38 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     getSortedCategories,
   } = useProcedureConfig();
   
-  const [searchTokens, setSearchTokens] = useState<string[]>([]);
+  const [searchTokens, setSearchTokens] = useState<SearchToken[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [activeProcedure, setActiveProcedure] = useState<ProcedureDefinition | null>(null);
   const [keepOpen, setKeepOpen] = useState(false);
   const [preserveFilters, setPreserveFilters] = useState(false);
+  const [filterOnExpand, setFilterOnExpand] = useState(true);
+  const [catOnly, setCatOnly] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // State for field values when a procedure with fields is selected
   const [fieldValues, setFieldValues] = useState<Record<string, string | number>>({});
+  
+  // State for tracking expanded subcategories (key format: "categoryId:subcategoryId")
+  const [expandedSubcategories, setExpandedSubcategories] = useState<Set<string>>(new Set());
+  
+  // State for tracking expanded categories
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
+
+  // Helper to determine token type from a value
+  const getTokenType = (value: string): TokenType => {
+    const lowerValue = value.toLowerCase();
+    // Check if it matches a category name
+    if (categories.some(c => c.name.toLowerCase() === lowerValue)) {
+      return 'category';
+    }
+    // Check if it matches a subcategory name
+    if (subcategories.some(s => s.name.toLowerCase() === lowerValue)) {
+      return 'subcategory';
+    }
+    return 'text';
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -49,6 +82,8 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
         if (!preserveFilters) {
           setSearchTokens([]);
           setInputValue('');
+          setExpandedSubcategories(new Set());
+          setExpandedCategories(new Set());
         }
         setActiveProcedure(null);
         setFieldValues({});
@@ -56,6 +91,20 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
       return () => clearTimeout(timer);
     }
   }, [isOpen, preserveFilters]);
+
+  // Clear expanded subcategories when search tokens change (except when we just added a token from expanding)
+  const lastExpandedTokenRef = useRef<string | null>(null);
+  useEffect(() => {
+    // If the last token added matches what we just expanded, don't clear
+    const lastToken = searchTokens[searchTokens.length - 1];
+    if (lastToken && lastToken.value === lastExpandedTokenRef.current) {
+      lastExpandedTokenRef.current = null;
+      return;
+    }
+    // Otherwise, clear all expanded states when tokens change
+    setExpandedSubcategories(new Set());
+    setExpandedCategories(new Set());
+  }, [searchTokens]);
 
   // Reset field values when active procedure changes
   useEffect(() => {
@@ -259,9 +308,9 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
 
   const filteredProcedures = useMemo(() => {
     const currentInputTokens = inputValue.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
-    const allTokens = [...searchTokens, ...currentInputTokens];
+    const allTokenValues = [...searchTokens.map(t => t.value), ...currentInputTokens];
 
-    if (allTokens.length === 0) {
+    if (allTokenValues.length === 0) {
       return procedures;
     }
 
@@ -270,7 +319,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
       const categoryName = getCategoryName(proc.categoryId);
       const subcategoryName = getSubcategoryName(proc.subcategoryId);
       const searchSpace = `${categoryName} ${subcategoryName} ${proc.description}`.toLowerCase();
-      return allTokens.every(token => searchSpace.includes(token));
+      return allTokenValues.every(token => searchSpace.includes(token));
     });
   }, [procedures, searchTokens, inputValue, getCategoryName, getSubcategoryName]);
 
@@ -315,18 +364,17 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   };
 
   const suggestions = useMemo(() => {
-    const currentCatNames = new Set<string>();
-    const currentSubcatNames = new Set<string>();
+    // Collect category and subcategory IDs from filtered procedures
+    const currentCatIds = new Set<string>();
+    const currentSubcatIds = new Set<string>();
 
     filteredProcedures.forEach(p => {
-      const catName = getCategoryName(p.categoryId);
-      const subcatName = getSubcategoryName(p.subcategoryId);
-      if (catName) currentCatNames.add(catName);
-      if (subcatName) currentSubcatNames.add(subcatName);
+      if (p.categoryId) currentCatIds.add(p.categoryId);
+      if (p.subcategoryId) currentSubcatIds.add(p.subcategoryId);
     });
 
     const isUnfiltered = searchTokens.length === 0 && !inputValue.trim();
-    const existingTokens = new Set(searchTokens.map(t => t.toLowerCase()));
+    const existingTokens = new Set(searchTokens.map(t => t.value.toLowerCase()));
     const currentInput = inputValue.toLowerCase().trim();
     
     let candidates: string[] = [];
@@ -335,45 +383,81 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
       // Show categories sorted by sortOrder when unfiltered
       candidates = getSortedCategories().map(c => c.name);
     } else {
-      const catsArray = Array.from(currentCatNames).sort();
-      const usefulCats = catsArray.length > 1 ? catsArray : []; 
-      const subcatsArray = Array.from(currentSubcatNames).sort();
-      candidates = [...usefulCats, ...subcatsArray];
+      // Sort subcategories by sortOrder (show these first as they're more specific)
+      const sortedSubcatIds = Array.from(currentSubcatIds).sort((a, b) => {
+        const subA = getSubcategoryById(a);
+        const subB = getSubcategoryById(b);
+        return (subA?.sortOrder ?? 999999) - (subB?.sortOrder ?? 999999);
+      });
+      const subcatsArray = sortedSubcatIds.map(id => getSubcategoryName(id));
+      
+      // Sort categories by sortOrder (show at end if multiple categories match)
+      const sortedCatIds = Array.from(currentCatIds).sort((a, b) => {
+        const catA = getCategoryById(a);
+        const catB = getCategoryById(b);
+        return (catA?.sortOrder ?? 999999) - (catB?.sortOrder ?? 999999);
+      });
+      const catsArray = sortedCatIds.map(id => getCategoryName(id));
+      
+      // Determine which suggestions to show based on catOnly toggle
+      let usefulCats: string[] = [];
+      let usefulSubcats: string[] = [];
+      
+      if (catOnly) {
+        // When catOnly is ON:
+        // - Show categories if there are multiple (to help narrow down)
+        // - Only show subcategories when narrowed to 1 category
+        if (currentCatIds.size > 1) {
+          usefulCats = catsArray;
+          usefulSubcats = []; // Hide subcategories until narrowed to 1 category
+        } else {
+          usefulCats = []; // No need to show the single category
+          usefulSubcats = subcatsArray; // Show subcategories for the single category
+        }
+      } else {
+        // When OFF: show both categories and subcategories
+        usefulCats = catsArray.length > 1 ? catsArray : [];
+        usefulSubcats = subcatsArray;
+      }
+      
+      // Categories first (for narrowing down), then subcategories (more specific)
+      candidates = [...usefulCats, ...usefulSubcats];
     }
 
     // Remove duplicates and already selected tokens
     let filtered = Array.from(new Set(candidates))
       .filter(s => !existingTokens.has(s.toLowerCase()));
     
-    // Prioritize suggestions that contain the current input value
+    // Prioritize suggestions that contain the current input value (but preserve sortOrder otherwise)
     if (currentInput) {
       filtered.sort((a, b) => {
         const aContains = a.toLowerCase().includes(currentInput);
         const bContains = b.toLowerCase().includes(currentInput);
         if (aContains && !bContains) return -1;
         if (!aContains && bContains) return 1;
-        return a.localeCompare(b);
+        return 0; // Preserve existing order when both contain or both don't contain
       });
     }
     
     return filtered.slice(0, 30); // Limit to 30 to prevent UI clutter
-  }, [filteredProcedures, searchTokens, inputValue, getCategoryName, getSubcategoryName, getSortedCategories]);
+  }, [filteredProcedures, searchTokens, inputValue, getCategoryName, getSubcategoryName, getSortedCategories, getCategoryById, getSubcategoryById, catOnly]);
 
-  const addToken = (token: string) => {
+  const addToken = (token: string, type?: TokenType) => {
+    const tokenType = type ?? getTokenType(token);
     setSearchTokens(prev => {
       const newTokens = [...prev];
       const currentInputTokens = inputValue.trim().split(/\s+/).filter(t => t.length > 0);
       
       currentInputTokens.forEach(t => {
         const lowerT = t.toLowerCase();
-        if (!newTokens.includes(lowerT)) {
-          newTokens.push(lowerT);
+        if (!newTokens.some(tok => tok.value === lowerT)) {
+          newTokens.push({ value: lowerT, type: getTokenType(t) });
         }
       });
 
       const tokenLower = token.toLowerCase();
-      if (!newTokens.includes(tokenLower)) {
-        newTokens.push(tokenLower);
+      if (!newTokens.some(tok => tok.value === tokenLower)) {
+        newTokens.push({ value: tokenLower, type: tokenType });
       }
       return newTokens;
     });
@@ -386,7 +470,8 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
       const val = inputValue.trim();
       if (val) {
         e.preventDefault();
-        setSearchTokens(prev => [...prev, val.toLowerCase()]);
+        const tokenType = getTokenType(val);
+        setSearchTokens(prev => [...prev, { value: val.toLowerCase(), type: tokenType }]);
         setInputValue('');
       } else if (e.key === ' ') {
         e.preventDefault(); 
@@ -418,18 +503,40 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
             <SearchIcon />
           </div>
           
-          {searchTokens.map((token, idx) => (
-            <div key={`${token}-${idx}`} className="bg-cyan-900/40 border border-cyan-700/50 text-cyan-200 text-sm rounded-full px-3 py-1 flex items-center gap-2 animate-fade-in-fast">
-              <span>{token}</span>
-              <button 
-                onClick={(e) => { e.stopPropagation(); removeToken(idx); }}
-                className="text-cyan-400 hover:text-white focus:outline-none rounded-full p-0.5 hover:bg-cyan-800/50 transition-colors"
-                aria-label={`Remove filter ${token}`}
-              >
-                <CloseIcon className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
+          {searchTokens.map((token, idx) => {
+            const typeStyles = {
+              category: 'bg-purple-900/40 border-purple-700/50 text-purple-200',
+              subcategory: 'bg-cyan-900/40 border-cyan-700/50 text-cyan-200',
+              text: 'bg-slate-700/60 border-slate-600/50 text-slate-200',
+            };
+            const typeLabel = {
+              category: 'CAT',
+              subcategory: 'SUB',
+              text: '',
+            };
+            const typeLabelStyles = {
+              category: 'bg-purple-700/50 text-purple-200',
+              subcategory: 'bg-cyan-700/50 text-cyan-200',
+              text: '',
+            };
+            return (
+              <div key={`${token.value}-${idx}`} className={`${typeStyles[token.type]} border text-sm rounded-full px-2 py-1 flex items-center gap-1.5 animate-fade-in-fast`}>
+                {typeLabel[token.type] && (
+                  <span className={`${typeLabelStyles[token.type]} text-[10px] font-bold px-1.5 py-0.5 rounded-full`}>
+                    {typeLabel[token.type]}
+                  </span>
+                )}
+                <span>{token.value}</span>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); removeToken(idx); }}
+                  className="text-current opacity-60 hover:opacity-100 focus:outline-none rounded-full p-0.5 hover:bg-white/10 transition-colors"
+                  aria-label={`Remove filter ${token.value}`}
+                >
+                  <CloseIcon className="h-3 w-3" />
+                </button>
+              </div>
+            );
+          })}
 
           <input
             ref={inputRef}
@@ -462,16 +569,44 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           <div className="mt-3">
              <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider font-semibold">Refine by:</p>
              <div className="flex flex-wrap gap-2">
-              {suggestions.map(s => (
-                <button
-                  key={s}
-                  onClick={() => addToken(s)}
-                  className="text-xs font-medium px-3 py-1.5 rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/50 hover:bg-cyan-900/40 hover:text-cyan-400 hover:border-cyan-500/50 transition-all duration-200 flex items-center gap-1 group"
-                >
-                  <span className="text-slate-500 group-hover:text-cyan-400 transition-colors">+</span>
-                  {s}
-                </button>
-              ))}
+              {suggestions.map(s => {
+                const suggestionType = getTokenType(s);
+                const isCategory = suggestionType === 'category';
+                const isSubcategory = suggestionType === 'subcategory';
+                const badgeStyles = isCategory 
+                  ? 'bg-purple-700/50 text-purple-200' 
+                  : isSubcategory 
+                    ? 'bg-cyan-700/50 text-cyan-200' 
+                    : '';
+                const buttonStyles = isCategory
+                  ? 'bg-purple-900/30 border-purple-700/50 hover:bg-purple-900/50 hover:border-purple-500/50'
+                  : isSubcategory
+                    ? 'bg-cyan-900/30 border-cyan-700/50 hover:bg-cyan-900/50 hover:border-cyan-500/50'
+                    : 'bg-slate-700/50 border-slate-600/50 hover:bg-cyan-900/40 hover:border-cyan-500/50';
+                const textStyles = isCategory
+                  ? 'text-purple-200 hover:text-purple-100'
+                  : isSubcategory
+                    ? 'text-cyan-200 hover:text-cyan-100'
+                    : 'text-slate-300 hover:text-cyan-400';
+                
+                return (
+                  <button
+                    key={s}
+                    onClick={() => addToken(s, suggestionType)}
+                    className={`text-xs font-medium px-2 py-1.5 rounded-full border ${buttonStyles} ${textStyles} transition-all duration-200 flex items-center gap-1.5`}
+                  >
+                    {(isCategory || isSubcategory) && (
+                      <span className={`${badgeStyles} text-[10px] font-bold px-1.5 py-0.5 rounded-full`}>
+                        {isCategory ? 'CAT' : 'SUB'}
+                      </span>
+                    )}
+                    {!isCategory && !isSubcategory && (
+                      <span className="text-slate-500">+</span>
+                    )}
+                    {s}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -482,34 +617,121 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
             const subcategories = groupedProcedures[categoryId];
             const categoryName = getCategoryName(categoryId);
             const sortedSubcategoryIds = getSortedSubcategoryIds(subcategories);
+            const hasMultipleSubcategories = sortedSubcategoryIds.length > 1;
+            const hasMultipleCategories = sortedCategoryIds.length > 1;
+            const isCategoryExpanded = !hasMultipleCategories || expandedCategories.has(categoryId);
+            
+            // Count total procedures in this category
+            const totalProceduresInCategory = sortedSubcategoryIds.reduce(
+              (sum, subId) => sum + subcategories[subId].length, 0
+            );
+            
+            const toggleCategoryExpanded = () => {
+              const isCurrentlyExpanded = expandedCategories.has(categoryId);
+              
+              setExpandedCategories(prev => {
+                const next = new Set(prev);
+                if (next.has(categoryId)) {
+                  next.delete(categoryId);
+                } else {
+                  next.add(categoryId);
+                }
+                return next;
+              });
+              
+              // When expanding, optionally add category as a search token
+              if (!isCurrentlyExpanded && filterOnExpand) {
+                const tokenLower = categoryName.toLowerCase();
+                if (!searchTokens.some(t => t.value === tokenLower)) {
+                  lastExpandedTokenRef.current = tokenLower;
+                  setSearchTokens(prev => [...prev, { value: tokenLower, type: 'category' }]);
+                }
+              }
+            };
             
             return (
-              <div key={categoryId} className="mb-4">
-                <h3 className="text-lg font-semibold text-slate-400 mb-2 sticky top-0 bg-slate-800 py-3 z-0">{categoryName}</h3>
-                {sortedSubcategoryIds.map((subcategoryId) => {
+              <div key={categoryId} className={isCategoryExpanded ? "mb-4" : "mb-1"}>
+                {hasMultipleCategories ? (
+                  <button
+                    onClick={toggleCategoryExpanded}
+                    className={`flex items-center gap-2 text-lg font-semibold text-slate-400 sticky top-0 bg-slate-800 z-0 w-full text-left hover:text-slate-300 transition-colors ${isCategoryExpanded ? 'mb-2 py-3' : 'py-2'}`}
+                  >
+                    <ChevronIcon 
+                      className="w-5 h-5 flex-shrink-0" 
+                      direction={isCategoryExpanded ? 'down' : 'right'} 
+                    />
+                    <span>{categoryName}</span>
+                    <span className="text-sm text-slate-500 font-normal">({totalProceduresInCategory})</span>
+                  </button>
+                ) : (
+                  <h3 className="text-lg font-semibold text-slate-400 mb-2 sticky top-0 bg-slate-800 py-3 z-0">{categoryName}</h3>
+                )}
+                {isCategoryExpanded && sortedSubcategoryIds.map((subcategoryId) => {
                   const procs = subcategories[subcategoryId];
                   const subcategoryName = getSubcategoryName(subcategoryId);
+                  const expansionKey = `${categoryId}:${subcategoryId}`;
+                  const isExpanded = !hasMultipleSubcategories || expandedSubcategories.has(expansionKey);
+                  
+                  const toggleExpanded = () => {
+                    const isCurrentlyExpanded = expandedSubcategories.has(expansionKey);
+                    
+                    setExpandedSubcategories(prev => {
+                      const next = new Set(prev);
+                      if (next.has(expansionKey)) {
+                        next.delete(expansionKey);
+                      } else {
+                        next.add(expansionKey);
+                      }
+                      return next;
+                    });
+                    
+                    // When expanding, optionally add subcategory as a search token
+                    if (!isCurrentlyExpanded && filterOnExpand) {
+                      const tokenLower = subcategoryName.toLowerCase();
+                      if (!searchTokens.some(t => t.value === tokenLower)) {
+                        // Track this token so we don't clear expanded state when it's added
+                        lastExpandedTokenRef.current = tokenLower;
+                        setSearchTokens(prev => [...prev, { value: tokenLower, type: 'subcategory' }]);
+                      }
+                    }
+                  };
                   
                   return (
-                    <div key={subcategoryId} className="mb-3 pl-2">
-                      <h4 className="font-semibold text-cyan-400 mb-2">{subcategoryName}</h4>
-                      <ul className="space-y-1 pl-2 border-l border-slate-700">
-                        {[...procs]
-                          .sort((a, b) => a.description.localeCompare(b.description))
-                          .map((proc, index) => (
-                            <li key={`${proc.controlName}-${index}`}>
-                              <button
-                                onClick={() => handleProcedureClick(proc)}
-                                className="w-full text-left p-2 rounded-md hover:bg-cyan-500/10 transition-colors duration-200"
-                              >
-                                <span className="text-slate-300">{proc.description}</span>
-                                {proc.fields.length === 0 && (
-                                  <span className="ml-2 text-xs text-slate-500">(quick add)</span>
-                                )}
-                              </button>
-                            </li>
-                          ))}
-                      </ul>
+                    <div key={subcategoryId} className={`pl-2 ${isExpanded ? 'mb-3' : 'mb-1'}`}>
+                      {hasMultipleSubcategories ? (
+                        <button
+                          onClick={toggleExpanded}
+                          className={`flex items-center gap-2 font-semibold text-cyan-400 hover:text-cyan-300 transition-colors w-full text-left ${isExpanded ? 'mb-2' : ''}`}
+                        >
+                          <ChevronIcon 
+                            className="w-4 h-4 flex-shrink-0" 
+                            direction={isExpanded ? 'down' : 'right'} 
+                          />
+                          <span>{subcategoryName}</span>
+                          <span className="text-xs text-slate-500 font-normal">({procs.length})</span>
+                        </button>
+                      ) : (
+                        <h4 className="font-semibold text-cyan-400 mb-2">{subcategoryName}</h4>
+                      )}
+                      {isExpanded && (
+                        <ul className="space-y-1 pl-2 border-l border-slate-700">
+                          {[...procs]
+                            .sort((a, b) => a.description.localeCompare(b.description))
+                            .map((proc, index) => (
+                              <li key={`${proc.controlName}-${index}`}>
+                                <button
+                                  onClick={() => handleProcedureClick(proc)}
+                                  className="w-full text-left p-2 rounded-md hover:bg-cyan-500/10 transition-colors duration-200"
+                                >
+                                  <span className="text-slate-300">{proc.description}</span>
+                                  {proc.fields.length === 0 && (
+                                    <span className="ml-2 text-xs text-slate-500">(quick add)</span>
+                                  )}
+                                </button>
+                              </li>
+                            ))}
+                        </ul>
+                      )}
                     </div>
                   );
                 })}
@@ -577,7 +799,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
       aria-labelledby="dialog-title"
     >
       <div
-        className="bg-slate-800 text-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col h-full max-h-[90vh] border border-slate-700 animate-slide-up"
+        className="bg-slate-800 text-white rounded-2xl shadow-2xl w-full max-w-[840px] flex flex-col h-full max-h-[90vh] border border-slate-700 animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 bg-slate-800 z-20 flex-shrink-0 gap-4">
@@ -604,6 +826,26 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           </div>
           
           <div className="flex items-center gap-3 flex-shrink-0">
+            <label className="flex items-center space-x-2 text-sm text-slate-400 hover:text-white cursor-pointer select-none group" title="Auto-filter when expanding categories/subcategories">
+              <input 
+                type="checkbox" 
+                checked={filterOnExpand} 
+                onChange={(e) => setFilterOnExpand(e.target.checked)}
+                className="appearance-none h-4 w-4 bg-slate-700 border border-slate-600 rounded checked:bg-cyan-500 checked:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all cursor-pointer relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[5px] after:top-[1px] after:w-[5px] after:h-[9px] after:border-r-2 after:border-b-2 after:border-white after:rotate-45"
+              />
+              <span className="group-hover:text-cyan-300 transition-colors whitespace-nowrap hidden sm:inline">Auto-filter</span>
+            </label>
+
+            <label className="flex items-center space-x-2 text-sm text-slate-400 hover:text-white cursor-pointer select-none group" title="Only show category suggestions until narrowed to one category">
+              <input 
+                type="checkbox" 
+                checked={catOnly} 
+                onChange={(e) => setCatOnly(e.target.checked)}
+                className="appearance-none h-4 w-4 bg-slate-700 border border-slate-600 rounded checked:bg-cyan-500 checked:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all cursor-pointer relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[5px] after:top-[1px] after:w-[5px] after:h-[9px] after:border-r-2 after:border-b-2 after:border-white after:rotate-45"
+              />
+              <span className="group-hover:text-cyan-300 transition-colors whitespace-nowrap hidden sm:inline">Cat only</span>
+            </label>
+
             <label className="flex items-center space-x-2 text-sm text-slate-400 hover:text-white cursor-pointer select-none group" title="Keep search filters when closing dialog">
               <input 
                 type="checkbox" 

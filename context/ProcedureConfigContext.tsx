@@ -1,9 +1,61 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
 import { ProcedureConfig, ProcedureDefinition, CategoryDefinition, SubcategoryDefinition } from '../types';
 import { parseConfigJson, configToJson } from '../utils/migrateProcedures';
 
 // Import the default config
 import defaultConfig from '../procedures.json';
+
+// localStorage key for persisting config
+const STORAGE_KEY = 'procedure-config';
+
+/**
+ * Load config from localStorage if available, otherwise return null
+ */
+function loadFromStorage(): ProcedureConfig | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return parseConfigJson(stored);
+    }
+  } catch (e) {
+    console.warn('Failed to load config from localStorage:', e);
+  }
+  return null;
+}
+
+/**
+ * Save config to localStorage
+ */
+function saveToStorage(config: ProcedureConfig): void {
+  try {
+    const json = configToJson(config);
+    localStorage.setItem(STORAGE_KEY, json);
+  } catch (e) {
+    console.warn('Failed to save config to localStorage:', e);
+  }
+}
+
+/**
+ * Clear saved config from localStorage
+ */
+function clearStorage(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {
+    console.warn('Failed to clear localStorage:', e);
+  }
+}
+
+/**
+ * Get initial config: try localStorage first, fall back to default
+ */
+function getInitialConfig(): ProcedureConfig {
+  const stored = loadFromStorage();
+  if (stored) {
+    return stored;
+  }
+  return defaultConfig as ProcedureConfig;
+}
 
 interface ProcedureConfigContextType {
   /** Current list of procedure definitions */
@@ -38,6 +90,10 @@ interface ProcedureConfigContextType {
   loadConfig: (file: File) => Promise<void>;
   /** Export current config as a JSON download */
   exportConfig: () => void;
+  /** Reset config to defaults (clears localStorage) */
+  resetToDefaults: () => void;
+  /** Whether the config has been modified from defaults */
+  hasStoredConfig: boolean;
   
   // Procedure CRUD
   /** Update all procedures in the config */
@@ -82,8 +138,16 @@ interface ProcedureConfigProviderProps {
 }
 
 export function ProcedureConfigProvider({ children }: ProcedureConfigProviderProps) {
-  const [config, setConfig] = useState<ProcedureConfig>(defaultConfig as ProcedureConfig);
+  // Initialize from localStorage if available, otherwise use defaults
+  const [config, setConfig] = useState<ProcedureConfig>(getInitialConfig);
   const [error, setError] = useState<string | null>(null);
+  const [hasStoredConfig, setHasStoredConfig] = useState(() => loadFromStorage() !== null);
+
+  // Save to localStorage whenever config changes
+  useEffect(() => {
+    saveToStorage(config);
+    setHasStoredConfig(true);
+  }, [config]);
 
   // Create lookup maps for efficient access
   const categoryMap = useMemo(() => {
@@ -181,6 +245,13 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, [config]);
+
+  const resetToDefaults = useCallback(() => {
+    clearStorage();
+    setConfig(defaultConfig as ProcedureConfig);
+    setHasStoredConfig(false);
+    setError(null);
+  }, []);
 
   // Procedure CRUD
   const updateProcedures = useCallback((procedures: ProcedureDefinition[]) => {
@@ -283,6 +354,8 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
         
         loadConfig,
         exportConfig,
+        resetToDefaults,
+        hasStoredConfig,
         
         updateProcedures,
         updateProcedure,

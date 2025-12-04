@@ -64,7 +64,9 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     getSortedCategories,
     getSortedSubcategories,
     loadConfig, 
-    exportConfig, 
+    exportConfig,
+    resetToDefaults,
+    hasStoredConfig,
     updateProcedure, 
     addProcedure, 
     deleteProcedure,
@@ -1146,6 +1148,28 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
             >
               Export
             </button>
+            {hasStoredConfig && (
+              <button
+                onClick={() => {
+                  if (confirm('Reset all configuration to defaults? This will discard all your changes.')) {
+                    resetToDefaults();
+                    setSelectedIndex(null);
+                    setEditingProcedure(null);
+                    setEditingCategory(null);
+                    setEditingSubcategory(null);
+                    setSelectedCategoryId(null);
+                    setSelectedSubcategoryId(null);
+                    setHasChanges(false);
+                    setIsAddingNew(false);
+                    showToast('Configuration reset to defaults', 'success');
+                  }
+                }}
+                className="px-3 py-1.5 text-sm bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
+                title="Reset all changes and restore default configuration"
+              >
+                Reset
+              </button>
+            )}
             <button
               onClick={onClose}
               className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors ml-2"
