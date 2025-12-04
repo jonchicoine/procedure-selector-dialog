@@ -43,10 +43,19 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     getCategoryById,
     getSubcategoryById,
     getSortedCategories,
-    // Favorites
+    getSubcategoriesForCategory,
+    // Procedure Favorites
     isFavorite,
     toggleFavorite,
     getFavoriteProcedures,
+    // Category Favorites
+    isCategoryFavorite,
+    toggleCategoryFavorite,
+    getFavoriteCategories,
+    // Subcategory Favorites
+    isSubcategoryFavorite,
+    toggleSubcategoryFavorite,
+    getFavoriteSubcategories,
     // Recents
     addToRecents,
     getRecentProcedures,
@@ -74,6 +83,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   const [showCategoryFilters, setShowCategoryFilters] = useState(false);
   const [showBodyPartFilters, setShowBodyPartFilters] = useState(false);
   const [showFavorites, setShowFavorites] = useState(true);
+  const [showFavoriteCategories, setShowFavoriteCategories] = useState(true);
   const [showRecent, setShowRecent] = useState(true);
 
 
@@ -739,7 +749,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
         )}
       </div>
       <div className="flex-grow overflow-y-auto px-3 pb-2">
-        {/* Favorites Section */}
+        {/* Favorite Procedures Section */}
         {searchTokens.length === 0 && !inputValue.trim() && getFavoriteProcedures().length > 0 && (
           <div className="mb-2">
             <button
@@ -751,7 +761,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                 direction={showFavorites ? 'down' : 'right'}
               />
               <StarIcon className="w-5 h-5" filled />
-              Favorites
+              Favorite Procedures
               <span className="text-sm font-normal text-amber-600">({getFavoriteProcedures().length})</span>
             </button>
             {showFavorites && (
@@ -772,6 +782,70 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                       <span className="text-slate-300">{proc.description}</span>
                       <span className="ml-2 text-xs text-slate-500">
                         {getCategoryName(proc.categoryId)} › {getSubcategoryName(proc.subcategoryId)}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {/* Favorite Categories & Subcategories Section (Combined) */}
+        {searchTokens.length === 0 && !inputValue.trim() && (getFavoriteCategories().length > 0 || getFavoriteSubcategories().length > 0) && (
+          <div className="mb-2">
+            <button
+              onClick={() => setShowFavoriteCategories(!showFavoriteCategories)}
+              className="w-full text-left font-semibold text-purple-400 flex items-center gap-2 sticky top-0 bg-slate-800 py-1 z-0 hover:text-purple-300 transition-colors"
+            >
+              <ChevronIcon 
+                className="w-4 h-4"
+                direction={showFavoriteCategories ? 'down' : 'right'}
+              />
+              <StarIcon className="w-5 h-5" filled />
+              Favorite Categories
+              <span className="text-sm font-normal text-purple-600">({getFavoriteCategories().length + getFavoriteSubcategories().length})</span>
+            </button>
+            {showFavoriteCategories && (
+              <ul className="space-y-0 pl-2 border-l border-purple-700/50 mt-1">
+                {getFavoriteCategories().map((cat) => (
+                  <li key={`fav-cat-${cat.id}`} className="flex items-center group">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleCategoryFavorite(cat.id); }}
+                      className="p-1 mr-1 text-amber-400 hover:text-amber-300 opacity-60 hover:opacity-100 transition-all"
+                      aria-label="Remove category from favorites"
+                    >
+                      <StarIcon className="h-4 w-4" filled />
+                    </button>
+                    <button
+                      onClick={() => addToken(cat.name, 'category')}
+                      className="flex-grow text-left py-1 px-1.5 rounded hover:bg-purple-500/10 transition-colors duration-200 flex items-center gap-2"
+                    >
+                      <span className="bg-purple-700/50 text-purple-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">CAT</span>
+                      <span className="text-slate-300">{cat.name}</span>
+                      <span className="text-xs text-slate-500">
+                        ({procedures.filter(p => p.categoryId === cat.id).length} procedures)
+                      </span>
+                    </button>
+                  </li>
+                ))}
+                {getFavoriteSubcategories().map((subcat) => (
+                  <li key={`fav-subcat-${subcat.id}`} className="flex items-center group">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleSubcategoryFavorite(subcat.id); }}
+                      className="p-1 mr-1 text-amber-400 hover:text-amber-300 opacity-60 hover:opacity-100 transition-all"
+                      aria-label="Remove subcategory from favorites"
+                    >
+                      <StarIcon className="h-4 w-4" filled />
+                    </button>
+                    <button
+                      onClick={() => addToken(subcat.name, 'subcategory')}
+                      className="flex-grow text-left py-1 px-1.5 rounded hover:bg-cyan-500/10 transition-colors duration-200 flex items-center gap-2"
+                    >
+                      <span className="bg-cyan-700/50 text-cyan-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">SUB</span>
+                      <span className="text-slate-300">{subcat.name}</span>
+                      <span className="text-xs text-slate-500">
+                        ({procedures.filter(p => p.subcategoryId === subcat.id).length} procedures)
                       </span>
                     </button>
                   </li>
@@ -827,8 +901,13 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           </div>
         )}
 
-        {/* Divider if we have favorites or recents */}
-        {searchTokens.length === 0 && !inputValue.trim() && (getFavoriteProcedures().length > 0 || getRecentProcedures().length > 0) && sortedCategoryIds.length > 0 && (
+        {/* Divider if we have any favorites or recents sections */}
+        {searchTokens.length === 0 && !inputValue.trim() && (
+          getFavoriteProcedures().length > 0 || 
+          getFavoriteCategories().length > 0 || 
+          getFavoriteSubcategories().length > 0 || 
+          getRecentProcedures().length > 0
+        ) && sortedCategoryIds.length > 0 && (
           <div className="border-t border-slate-700 my-2 pt-1">
             <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">All Procedures</p>
           </div>
@@ -874,20 +953,46 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
             return (
               <div key={categoryId} className={isCategoryExpanded ? "mb-2" : "mb-0.5"}>
                 {hasMultipleCategories ? (
-                  <button
-                    onClick={toggleCategoryExpanded}
-                    className={`flex items-center gap-2 font-semibold text-slate-400 sticky top-0 bg-slate-800 z-0 w-full text-left hover:text-slate-300 transition-colors ${isCategoryExpanded ? 'mb-1 py-1' : 'py-0.5'}`}
-                  >
-                    <ChevronIcon 
-                      className="w-4 h-4 flex-shrink-0" 
-                      direction={isCategoryExpanded ? 'down' : 'right'} 
-                    />
-                    <span>{categoryName}</span>
-                    <span className="text-sm text-slate-500 font-normal">({totalProceduresInCategory})</span>
-                  </button>
-                ) : (
-                  <h3 className="font-semibold text-slate-400 mb-1 sticky top-0 bg-slate-800 py-1 z-0">{categoryName}</h3>
-                )}
+                                  <div className={`flex items-center gap-1 sticky top-0 bg-slate-800 z-0 ${isCategoryExpanded ? 'mb-1 py-1' : 'py-0.5'} group/cat`}>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); toggleCategoryFavorite(categoryId); }}
+                                      className={`p-1 transition-all flex-shrink-0 ${
+                                        isCategoryFavorite(categoryId) 
+                                          ? 'text-amber-400 hover:text-amber-300' 
+                                          : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover/cat:opacity-100'
+                                      }`}
+                                      aria-label={isCategoryFavorite(categoryId) ? "Remove category from favorites" : "Add category to favorites"}
+                                    >
+                                      <StarIcon className="h-4 w-4" filled={isCategoryFavorite(categoryId)} />
+                                    </button>
+                                    <button
+                                      onClick={toggleCategoryExpanded}
+                                      className="flex items-center gap-2 font-semibold text-slate-400 w-full text-left hover:text-slate-300 transition-colors"
+                                    >
+                                      <ChevronIcon 
+                                        className="w-4 h-4 flex-shrink-0" 
+                                        direction={isCategoryExpanded ? 'down' : 'right'} 
+                                      />
+                                      <span>{categoryName}</span>
+                                      <span className="text-sm text-slate-500 font-normal">({totalProceduresInCategory})</span>
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1 mb-1 sticky top-0 bg-slate-800 py-1 z-0 group/cat">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); toggleCategoryFavorite(categoryId); }}
+                                      className={`p-1 transition-all flex-shrink-0 ${
+                                        isCategoryFavorite(categoryId) 
+                                          ? 'text-amber-400 hover:text-amber-300' 
+                                          : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover/cat:opacity-100'
+                                      }`}
+                                      aria-label={isCategoryFavorite(categoryId) ? "Remove category from favorites" : "Add category to favorites"}
+                                    >
+                                      <StarIcon className="h-4 w-4" filled={isCategoryFavorite(categoryId)} />
+                                    </button>
+                                    <h3 className="font-semibold text-slate-400">{categoryName}</h3>
+                                  </div>
+                                )}
                 {isCategoryExpanded && sortedSubcategoryIds.map((subcategoryId) => {
                   const procs = subcategories[subcategoryId];
                   const subcategoryName = getSubcategoryName(subcategoryId);
@@ -921,20 +1026,46 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                   return (
                     <div key={subcategoryId} className={`pl-2 ${isExpanded ? 'mb-1.5' : 'mb-0.5'}`}>
                       {hasMultipleSubcategories ? (
-                        <button
-                          onClick={toggleExpanded}
-                          className={`flex items-center gap-2 font-semibold text-cyan-400 hover:text-cyan-300 transition-colors w-full text-left ${isExpanded ? 'mb-0.5' : ''}`}
-                        >
-                          <ChevronIcon 
-                            className="w-4 h-4 flex-shrink-0" 
-                            direction={isExpanded ? 'down' : 'right'} 
-                          />
-                          <span>{subcategoryName}</span>
-                          <span className="text-xs text-slate-500 font-normal">({procs.length})</span>
-                        </button>
-                      ) : (
-                        <h4 className="font-semibold text-cyan-400 mb-0.5">{subcategoryName}</h4>
-                      )}
+                                        <div className={`flex items-center gap-1 ${isExpanded ? 'mb-0.5' : ''} group/subcat`}>
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); toggleSubcategoryFavorite(subcategoryId); }}
+                                            className={`p-1 transition-all flex-shrink-0 ${
+                                              isSubcategoryFavorite(subcategoryId) 
+                                                ? 'text-amber-400 hover:text-amber-300' 
+                                                : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover/subcat:opacity-100'
+                                            }`}
+                                            aria-label={isSubcategoryFavorite(subcategoryId) ? "Remove subcategory from favorites" : "Add subcategory to favorites"}
+                                          >
+                                            <StarIcon className="h-4 w-4" filled={isSubcategoryFavorite(subcategoryId)} />
+                                          </button>
+                                          <button
+                                            onClick={toggleExpanded}
+                                            className="flex items-center gap-2 font-semibold text-cyan-400 hover:text-cyan-300 transition-colors w-full text-left"
+                                          >
+                                            <ChevronIcon 
+                                              className="w-4 h-4 flex-shrink-0" 
+                                              direction={isExpanded ? 'down' : 'right'} 
+                                            />
+                                            <span>{subcategoryName}</span>
+                                            <span className="text-xs text-slate-500 font-normal">({procs.length})</span>
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-1 mb-0.5 group/subcat">
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); toggleSubcategoryFavorite(subcategoryId); }}
+                                            className={`p-1 transition-all flex-shrink-0 ${
+                                              isSubcategoryFavorite(subcategoryId) 
+                                                ? 'text-amber-400 hover:text-amber-300' 
+                                                : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover/subcat:opacity-100'
+                                            }`}
+                                            aria-label={isSubcategoryFavorite(subcategoryId) ? "Remove subcategory from favorites" : "Add subcategory to favorites"}
+                                          >
+                                            <StarIcon className="h-4 w-4" filled={isSubcategoryFavorite(subcategoryId)} />
+                                          </button>
+                                          <h4 className="font-semibold text-cyan-400">{subcategoryName}</h4>
+                                        </div>
+                                      )}
                       {isExpanded && (
                         <ul className="space-y-0 pl-2 border-l border-slate-700">
                           {[...procs]

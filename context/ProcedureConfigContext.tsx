@@ -8,6 +8,8 @@ import defaultConfig from '../procedures.json';
 // localStorage keys for persisting data
 const STORAGE_KEY = 'procedure-config';
 const FAVORITES_KEY = 'procedure-favorites';
+const CATEGORY_FAVORITES_KEY = 'category-favorites';
+const SUBCATEGORY_FAVORITES_KEY = 'subcategory-favorites';
 const RECENTS_KEY = 'procedure-recents';
 const MAX_RECENTS = 10;
 
@@ -73,6 +75,60 @@ function saveFavorites(favorites: Set<string>): void {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(favorites)));
   } catch (e) {
     console.warn('Failed to save favorites to localStorage:', e);
+  }
+}
+
+/**
+ * Load category favorites from localStorage (stored as array of category IDs)
+ */
+function loadCategoryFavorites(): Set<string> {
+  try {
+    const stored = localStorage.getItem(CATEGORY_FAVORITES_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return new Set(Array.isArray(parsed) ? parsed : []);
+    }
+  } catch (e) {
+    console.warn('Failed to load category favorites from localStorage:', e);
+  }
+  return new Set();
+}
+
+/**
+ * Save category favorites to localStorage
+ */
+function saveCategoryFavorites(favorites: Set<string>): void {
+  try {
+    localStorage.setItem(CATEGORY_FAVORITES_KEY, JSON.stringify(Array.from(favorites)));
+  } catch (e) {
+    console.warn('Failed to save category favorites to localStorage:', e);
+  }
+}
+
+/**
+ * Load subcategory favorites from localStorage (stored as array of subcategory IDs)
+ */
+function loadSubcategoryFavorites(): Set<string> {
+  try {
+    const stored = localStorage.getItem(SUBCATEGORY_FAVORITES_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return new Set(Array.isArray(parsed) ? parsed : []);
+    }
+  } catch (e) {
+    console.warn('Failed to load subcategory favorites from localStorage:', e);
+  }
+  return new Set();
+}
+
+/**
+ * Save subcategory favorites to localStorage
+ */
+function saveSubcategoryFavorites(favorites: Set<string>): void {
+  try {
+    localStorage.setItem(SUBCATEGORY_FAVORITES_KEY, JSON.stringify(Array.from(favorites)));
+  } catch (e) {
+    console.warn('Failed to save subcategory favorites to localStorage:', e);
   }
 }
 
@@ -187,7 +243,7 @@ interface ProcedureConfigContextType {
   /** Clear any error message */
   clearError: () => void;
   
-  // Favorites management
+  // Favorites management (procedures)
   /** Set of favorited procedure controlNames */
   favorites: Set<string>;
   /** Check if a procedure is favorited */
@@ -196,6 +252,26 @@ interface ProcedureConfigContextType {
   toggleFavorite: (controlName: string) => void;
   /** Get all favorited procedures */
   getFavoriteProcedures: () => ProcedureDefinition[];
+  
+  // Category favorites management
+  /** Set of favorited category IDs */
+  categoryFavorites: Set<string>;
+  /** Check if a category is favorited */
+  isCategoryFavorite: (categoryId: string) => boolean;
+  /** Toggle favorite status for a category */
+  toggleCategoryFavorite: (categoryId: string) => void;
+  /** Get all favorited categories */
+  getFavoriteCategories: () => CategoryDefinition[];
+  
+  // Subcategory favorites management
+  /** Set of favorited subcategory IDs */
+  subcategoryFavorites: Set<string>;
+  /** Check if a subcategory is favorited */
+  isSubcategoryFavorite: (subcategoryId: string) => boolean;
+  /** Toggle favorite status for a subcategory */
+  toggleSubcategoryFavorite: (subcategoryId: string) => void;
+  /** Get all favorited subcategories */
+  getFavoriteSubcategories: () => SubcategoryDefinition[];
   
   // Recent procedures management
   /** List of recently used procedure controlNames (most recent first) */
@@ -222,6 +298,8 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
   
   // Favorites and recents state
   const [favorites, setFavorites] = useState<Set<string>>(loadFavorites);
+  const [categoryFavorites, setCategoryFavorites] = useState<Set<string>>(loadCategoryFavorites);
+  const [subcategoryFavorites, setSubcategoryFavorites] = useState<Set<string>>(loadSubcategoryFavorites);
   const [recentControlNames, setRecentControlNames] = useState<string[]>(loadRecents);
 
   // Save to localStorage whenever config changes
@@ -438,6 +516,54 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
     return config.procedures.filter(p => favorites.has(p.controlName));
   }, [config.procedures, favorites]);
 
+  // Category favorites management
+  const isCategoryFavorite = useCallback((categoryId: string) => {
+    return categoryFavorites.has(categoryId);
+  }, [categoryFavorites]);
+
+  const toggleCategoryFavorite = useCallback((categoryId: string) => {
+    setCategoryFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      saveCategoryFavorites(next);
+      return next;
+    });
+  }, []);
+
+  const getFavoriteCategories = useCallback(() => {
+    return config.categories
+      .filter(c => categoryFavorites.has(c.id))
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [config.categories, categoryFavorites]);
+
+  // Subcategory favorites management
+  const isSubcategoryFavorite = useCallback((subcategoryId: string) => {
+    return subcategoryFavorites.has(subcategoryId);
+  }, [subcategoryFavorites]);
+
+  const toggleSubcategoryFavorite = useCallback((subcategoryId: string) => {
+    setSubcategoryFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(subcategoryId)) {
+        next.delete(subcategoryId);
+      } else {
+        next.add(subcategoryId);
+      }
+      saveSubcategoryFavorites(next);
+      return next;
+    });
+  }, []);
+
+  const getFavoriteSubcategories = useCallback(() => {
+    return config.subcategories
+      .filter(s => subcategoryFavorites.has(s.id))
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [config.subcategories, subcategoryFavorites]);
+
   // Recents management
   const addToRecents = useCallback((controlName: string) => {
     setRecentControlNames(prev => {
@@ -506,6 +632,16 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
         isFavorite,
         toggleFavorite,
         getFavoriteProcedures,
+        
+        categoryFavorites,
+        isCategoryFavorite,
+        toggleCategoryFavorite,
+        getFavoriteCategories,
+        
+        subcategoryFavorites,
+        isSubcategoryFavorite,
+        toggleSubcategoryFavorite,
+        getFavoriteSubcategories,
         
         recentControlNames,
         addToRecents,
