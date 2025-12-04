@@ -744,15 +744,15 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           <div className="mb-2">
             <button
               onClick={() => setShowFavorites(!showFavorites)}
-              className="w-full text-left text-sm font-semibold text-amber-400 flex items-center gap-1.5 sticky top-0 bg-slate-800 py-1 z-0 hover:text-amber-300 transition-colors"
+              className="w-full text-left font-semibold text-amber-400 flex items-center gap-2 sticky top-0 bg-slate-800 py-1 z-0 hover:text-amber-300 transition-colors"
             >
               <ChevronIcon 
-                className="w-3.5 h-3.5"
+                className="w-4 h-4"
                 direction={showFavorites ? 'down' : 'right'}
               />
-              <StarIcon className="w-4 h-4" filled />
+              <StarIcon className="w-5 h-5" filled />
               Favorites
-              <span className="text-xs font-normal text-amber-600">({getFavoriteProcedures().length})</span>
+              <span className="text-sm font-normal text-amber-600">({getFavoriteProcedures().length})</span>
             </button>
             {showFavorites && (
               <ul className="space-y-0 pl-2 border-l border-amber-700/50 mt-1">
@@ -760,16 +760,16 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                   <li key={`fav-${proc.controlName}-${index}`} className="flex items-center group">
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleFavorite(proc.controlName); }}
-                      className="p-1 mr-0.5 text-amber-400 hover:text-amber-300 opacity-60 hover:opacity-100 transition-all"
+                      className="p-1 mr-1 text-amber-400 hover:text-amber-300 opacity-60 hover:opacity-100 transition-all"
                       aria-label="Remove from favorites"
                     >
-                      <StarIcon className="h-3.5 w-3.5" filled />
+                      <StarIcon className="h-4 w-4" filled />
                     </button>
                     <button
                       onClick={() => handleProcedureClick(proc)}
                       className="flex-grow text-left py-1 px-1.5 rounded hover:bg-amber-500/10 transition-colors duration-200"
                     >
-                      <span className="text-sm text-slate-300">{proc.description}</span>
+                      <span className="text-slate-300">{proc.description}</span>
                       <span className="ml-2 text-xs text-slate-500">
                         {getCategoryName(proc.categoryId)} › {getSubcategoryName(proc.subcategoryId)}
                       </span>
@@ -786,15 +786,15 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           <div className="mb-2">
             <button
               onClick={() => setShowRecent(!showRecent)}
-              className="w-full text-left text-sm font-semibold text-slate-400 flex items-center gap-1.5 sticky top-0 bg-slate-800 py-1 z-0 hover:text-slate-300 transition-colors"
+              className="w-full text-left font-semibold text-slate-400 flex items-center gap-2 sticky top-0 bg-slate-800 py-1 z-0 hover:text-slate-300 transition-colors"
             >
               <ChevronIcon 
-                className="w-3.5 h-3.5"
+                className="w-4 h-4"
                 direction={showRecent ? 'down' : 'right'}
               />
-              <ClockIcon className="w-4 h-4" />
+              <ClockIcon className="w-5 h-5" />
               Recent
-              <span className="text-xs font-normal text-slate-500">({getRecentProcedures().length})</span>
+              <span className="text-sm font-normal text-slate-500">({getRecentProcedures().length})</span>
             </button>
             {showRecent && (
               <ul className="space-y-0 pl-2 border-l border-slate-700 mt-1">
@@ -802,20 +802,20 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                   <li key={`recent-${proc.controlName}-${index}`} className="flex items-center group">
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleFavorite(proc.controlName); }}
-                      className={`p-1 mr-0.5 transition-all ${
+                      className={`p-1 mr-1 transition-all ${
                         isFavorite(proc.controlName) 
                           ? 'text-amber-400 hover:text-amber-300' 
                           : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
                       }`}
                       aria-label={isFavorite(proc.controlName) ? "Remove from favorites" : "Add to favorites"}
                     >
-                      <StarIcon className="h-3.5 w-3.5" filled={isFavorite(proc.controlName)} />
+                      <StarIcon className="h-4 w-4" filled={isFavorite(proc.controlName)} />
                     </button>
                     <button
                       onClick={() => handleProcedureClick(proc)}
                       className="flex-grow text-left py-1 px-1.5 rounded hover:bg-cyan-500/10 transition-colors duration-200"
                     >
-                      <span className="text-sm text-slate-300">{proc.description}</span>
+                      <span className="text-slate-300">{proc.description}</span>
                       <span className="ml-2 text-xs text-slate-500">
                         {getCategoryName(proc.categoryId)} › {getSubcategoryName(proc.subcategoryId)}
                       </span>
@@ -876,17 +876,17 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                 {hasMultipleCategories ? (
                   <button
                     onClick={toggleCategoryExpanded}
-                    className={`flex items-center gap-1.5 text-sm font-semibold text-slate-400 sticky top-0 bg-slate-800 z-0 w-full text-left hover:text-slate-300 transition-colors ${isCategoryExpanded ? 'mb-1 py-1' : 'py-0.5'}`}
+                    className={`flex items-center gap-2 font-semibold text-slate-400 sticky top-0 bg-slate-800 z-0 w-full text-left hover:text-slate-300 transition-colors ${isCategoryExpanded ? 'mb-1 py-1' : 'py-0.5'}`}
                   >
                     <ChevronIcon 
-                      className="w-3.5 h-3.5 flex-shrink-0" 
+                      className="w-4 h-4 flex-shrink-0" 
                       direction={isCategoryExpanded ? 'down' : 'right'} 
                     />
                     <span>{categoryName}</span>
-                    <span className="text-xs text-slate-500 font-normal">({totalProceduresInCategory})</span>
+                    <span className="text-sm text-slate-500 font-normal">({totalProceduresInCategory})</span>
                   </button>
                 ) : (
-                  <h3 className="text-sm font-semibold text-slate-400 mb-1 sticky top-0 bg-slate-800 py-1 z-0">{categoryName}</h3>
+                  <h3 className="font-semibold text-slate-400 mb-1 sticky top-0 bg-slate-800 py-1 z-0">{categoryName}</h3>
                 )}
                 {isCategoryExpanded && sortedSubcategoryIds.map((subcategoryId) => {
                   const procs = subcategories[subcategoryId];
@@ -923,17 +923,17 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                       {hasMultipleSubcategories ? (
                         <button
                           onClick={toggleExpanded}
-                          className={`flex items-center gap-1.5 text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition-colors w-full text-left ${isExpanded ? 'mb-0.5' : ''}`}
+                          className={`flex items-center gap-2 font-semibold text-cyan-400 hover:text-cyan-300 transition-colors w-full text-left ${isExpanded ? 'mb-0.5' : ''}`}
                         >
                           <ChevronIcon 
-                            className="w-3.5 h-3.5 flex-shrink-0" 
+                            className="w-4 h-4 flex-shrink-0" 
                             direction={isExpanded ? 'down' : 'right'} 
                           />
                           <span>{subcategoryName}</span>
                           <span className="text-xs text-slate-500 font-normal">({procs.length})</span>
                         </button>
                       ) : (
-                        <h4 className="text-sm font-semibold text-cyan-400 mb-0.5">{subcategoryName}</h4>
+                        <h4 className="font-semibold text-cyan-400 mb-0.5">{subcategoryName}</h4>
                       )}
                       {isExpanded && (
                         <ul className="space-y-0 pl-2 border-l border-slate-700">
@@ -943,22 +943,22 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                               <li key={`${proc.controlName}-${index}`} className="flex items-center group">
                                 <button
                                   onClick={(e) => { e.stopPropagation(); toggleFavorite(proc.controlName); }}
-                                  className={`p-1 mr-0.5 transition-all ${
+                                  className={`p-1 mr-1 transition-all ${
                                     isFavorite(proc.controlName) 
                                       ? 'text-amber-400 hover:text-amber-300' 
                                       : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
                                   }`}
                                   aria-label={isFavorite(proc.controlName) ? "Remove from favorites" : "Add to favorites"}
                                 >
-                                  <StarIcon className="h-3.5 w-3.5" filled={isFavorite(proc.controlName)} />
+                                  <StarIcon className="h-4 w-4" filled={isFavorite(proc.controlName)} />
                                 </button>
                                 <button
                                   onClick={() => handleProcedureClick(proc)}
                                   className="flex-grow text-left py-1 px-1.5 rounded hover:bg-cyan-500/10 transition-colors duration-200"
                                 >
-                                  <span className="text-sm text-slate-300">{proc.description}</span>
+                                  <span className="text-slate-300">{proc.description}</span>
                                   {proc.fields.length === 0 && (
-                                    <span className="ml-1.5 text-xs text-slate-500">(quick add)</span>
+                                    <span className="ml-2 text-xs text-slate-500">(quick add)</span>
                                   )}
                                 </button>
                               </li>
@@ -973,8 +973,8 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           })
         ) : (
           <div className="text-center py-6 text-slate-500" role="status">
-            <p className="font-semibold text-sm">No procedures found</p>
-            <p className="text-xs">Try adjusting your search filters.</p>
+            <p className="font-semibold">No procedures found</p>
+            <p className="text-sm">Try adjusting your search filters.</p>
           </div>
         )}
       </div>
