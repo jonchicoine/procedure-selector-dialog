@@ -3,9 +3,11 @@ import { CloseIcon } from './icons/CloseIcon';
 import { SaveIcon } from './icons/SaveIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import { PlusIcon } from './icons/PlusIcon';
+import { UploadIcon } from './icons/UploadIcon';
 import { useProcedureConfig } from '../context/ProcedureConfigContext';
 import { useToast } from './Toast';
 import { ProcedureDefinition, ProcedureFieldDefinition, CategoryDefinition, SubcategoryDefinition } from '../types';
+import { publishToGitHub, getStoredToken, storeToken, clearStoredToken, validateGitHubToken } from '../utils/githubApi';
 
 interface ConfigEditorModalProps {
   isOpen: boolean;
@@ -61,6 +63,7 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     procedures, 
     categories,
     subcategories,
+    version,
     getCategoryName,
     getSubcategoryName,
     getSortedCategories,
@@ -95,6 +98,12 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  
+  // GitHub publish state
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [githubToken, setGithubToken] = useState(getStoredToken() || '');
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [commitMessage, setCommitMessage] = useState('');
 
   // Reset state when modal closes
   useEffect(() => {
@@ -168,6 +177,55 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
       showToast('Configuration exported successfully', 'success');
     } catch {
       showToast('Failed to export configuration', 'error');
+    }
+  };
+
+  // GitHub publish handler
+  const handlePublish = async () => {
+    if (!githubToken.trim()) {
+      showToast('Please enter a GitHub token', 'error');
+      return;
+    }
+
+    setIsPublishing(true);
+    
+    try {
+      // Validate token first
+      const isValid = await validateGitHubToken(githubToken);
+      if (!isValid) {
+        showToast('Invalid GitHub token. Please check and try again.', 'error');
+        setIsPublishing(false);
+        return;
+      }
+
+      // Store the token for future use
+      storeToken(githubToken);
+
+      // Build the full config object
+      const fullConfig = {
+        version: version,
+        categories: categories,
+        subcategories: subcategories,
+        procedures: procedures,
+      };
+
+      const result = await publishToGitHub(
+        fullConfig,
+        githubToken,
+        commitMessage.trim() || undefined
+      );
+
+      if (result.success) {
+        showToast('Published! Netlify will deploy in ~1-2 minutes.', 'success');
+        setShowPublishModal(false);
+        setCommitMessage('');
+      } else {
+        showToast(`Publish failed: ${result.error}`, 'error');
+      }
+    } catch (err) {
+      showToast('Publish failed. Please try again.', 'error');
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -1201,9 +1259,17 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
             </button>
             <button
               onClick={handleExport}
-              className="px-3 py-1.5 text-sm bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors"
+              className="px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
             >
               Export
+            </button>
+            <button
+              onClick={() => setShowPublishModal(true)}
+              className="px-3 py-1.5 text-sm bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors flex items-center gap-1.5"
+              title="Publish changes to GitHub (deploys to all users)"
+            >
+              <UploadIcon className="w-4 h-4" />
+              Publish
             </button>
             {hasStoredConfig && (
               <button
@@ -1288,6 +1354,114 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
           )}
         </div>
       </div>
+
+      {/* Publish to GitHub Modal */}
+      {showPublishModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
+          <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-md border border-slate-700">
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <UploadIcon className="w-5 h-5 text-green-400" />
+                Publish to GitHub
+              </h3>
+              <button
+                onClick={() => setShowPublishModal(false)}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                <CloseIcon className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              <p className="text-sm text-slate-300">
+                This will commit your changes to GitHub. Netlify will automatically deploy them in ~1-2 minutes, making them available to all users.
+              </p>
+              
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">
+                  GitHub Personal Access Token *
+                </label>
+                <input
+                  type="password"
+                  value={githubToken}
+                  onChange={(e) => setGithubToken(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Need a token? <a 
+                    href="https://github.com/settings/tokens/new?scopes=repo&description=Procedure%20Selector%20Config" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 underline"
+                  >
+                    Create one here
+                  </a> (select "repo" scope)
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">
+                  Commit Message (optional)
+                </label>
+                <input
+                  type="text"
+                  value={commitMessage}
+                  onChange={(e) => setCommitMessage(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Describe your changes..."
+                />
+              </div>
+
+              {getStoredToken() && (
+                <button
+                  onClick={() => {
+                    clearStoredToken();
+                    setGithubToken('');
+                    showToast('Saved token cleared', 'success');
+                  }}
+                  className="text-xs text-slate-400 hover:text-slate-300"
+                >
+                  Clear saved token
+                </button>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 p-4 border-t border-slate-700">
+              <button
+                onClick={() => setShowPublishModal(false)}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePublish}
+                disabled={isPublishing || !githubToken.trim()}
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                  isPublishing || !githubToken.trim()
+                    ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-500 text-white'
+                }`}
+              >
+                {isPublishing ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Publishing...
+                  </>
+                ) : (
+                  <>
+                    <UploadIcon className="w-4 h-4" />
+                    Publish
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
