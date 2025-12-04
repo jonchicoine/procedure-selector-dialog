@@ -72,6 +72,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   const [preserveFilters, setPreserveFilters] = useState(false);
   const [filterOnExpand, setFilterOnExpand] = useState(true);
   const [catOnly, setCatOnly] = useState(false);
+  const [flatView, setFlatView] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // State for field values when a procedure with fields is selected
@@ -969,7 +970,61 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           </div>
         )}
 
-        {sortedCategoryIds.length > 0 ? (
+        {/* Flat View Mode */}
+        {flatView && filteredProcedures.length > 0 ? (
+          <div className="space-y-0">
+            {[...filteredProcedures]
+              .sort((a, b) => {
+                // Sort by category, then subcategory, then description
+                const catA = getCategoryById(a.categoryId);
+                const catB = getCategoryById(b.categoryId);
+                const catOrderDiff = (catA?.sortOrder ?? 999999) - (catB?.sortOrder ?? 999999);
+                if (catOrderDiff !== 0) return catOrderDiff;
+                
+                const subA = getSubcategoryById(a.subcategoryId);
+                const subB = getSubcategoryById(b.subcategoryId);
+                const subOrderDiff = (subA?.sortOrder ?? 999999) - (subB?.sortOrder ?? 999999);
+                if (subOrderDiff !== 0) return subOrderDiff;
+                
+                return a.description.localeCompare(b.description);
+              })
+              .map((proc, index) => (
+                <div key={`flat-${proc.controlName}-${index}`} className="flex items-center group hover:bg-slate-700/30 rounded transition-colors">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(proc.controlName); }}
+                    className={`p-1.5 transition-all flex-shrink-0 ${
+                      isFavorite(proc.controlName) 
+                        ? 'text-amber-400 hover:text-amber-300' 
+                        : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
+                    }`}
+                    aria-label={isFavorite(proc.controlName) ? "Remove from favorites" : "Add to favorites"}
+                  >
+                    <StarIcon className="h-4 w-4" filled={isFavorite(proc.controlName)} />
+                  </button>
+                  <button
+                    onClick={() => handleProcedureClick(proc)}
+                    className="flex-grow text-left py-1.5 px-2 rounded flex items-center gap-2 min-w-0"
+                  >
+                    <span className="bg-purple-700/50 text-purple-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
+                      {getCategoryName(proc.categoryId)}
+                    </span>
+                    <span className="text-slate-300 truncate flex-grow">{proc.description}</span>
+                    <span className="bg-cyan-700/50 text-cyan-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
+                      {getSubcategoryName(proc.subcategoryId)}
+                    </span>
+                    {proc.fields.length === 0 && (
+                      <span className="text-xs text-slate-500 flex-shrink-0">(quick)</span>
+                    )}
+                  </button>
+                </div>
+              ))}
+          </div>
+        ) : flatView && filteredProcedures.length === 0 ? (
+          <div className="text-center py-6 text-slate-500" role="status">
+            <p className="font-semibold">No procedures found</p>
+            <p className="text-sm">Try adjusting your search filters.</p>
+          </div>
+        ) : sortedCategoryIds.length > 0 ? (
           sortedCategoryIds.map((categoryId) => {
             const subcategories = groupedProcedures[categoryId];
             const categoryName = getCategoryName(categoryId);
@@ -1264,6 +1319,16 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                 className="appearance-none h-4 w-4 bg-slate-700 border border-slate-600 rounded checked:bg-cyan-500 checked:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all cursor-pointer relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[5px] after:top-[1px] after:w-[5px] after:h-[9px] after:border-r-2 after:border-b-2 after:border-white after:rotate-45"
               />
               <span className="group-hover:text-cyan-300 transition-colors whitespace-nowrap hidden sm:inline">Cat only</span>
+            </label>
+
+            <label className="flex items-center space-x-2 text-sm text-slate-400 hover:text-white cursor-pointer select-none group" title="Display results as a flat list with Category, Subcategory, and Description on one row">
+              <input 
+                type="checkbox" 
+                checked={flatView} 
+                onChange={(e) => setFlatView(e.target.checked)}
+                className="appearance-none h-4 w-4 bg-slate-700 border border-slate-600 rounded checked:bg-cyan-500 checked:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all cursor-pointer relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[5px] after:top-[1px] after:w-[5px] after:h-[9px] after:border-r-2 after:border-b-2 after:border-white after:rotate-45"
+              />
+              <span className="group-hover:text-cyan-300 transition-colors whitespace-nowrap hidden sm:inline">Flat view</span>
             </label>
 
             <label className="flex items-center space-x-2 text-sm text-slate-400 hover:text-white cursor-pointer select-none group" title="Keep search filters when closing dialog">
