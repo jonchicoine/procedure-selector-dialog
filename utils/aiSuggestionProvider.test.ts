@@ -516,7 +516,7 @@ describe('createSuggestionProvider', () => {
       enabled: true,
       threshold: 50,
       maxSuggestions: 10,
-      facilityType: 'ed',
+      facilityTypes: ['ed'],
       autoSeed: true,
       aiProvider: 'local',
     };
@@ -531,7 +531,7 @@ describe('createSuggestionProvider', () => {
       enabled: true,
       threshold: 50,
       maxSuggestions: 10,
-      facilityType: 'ed',
+      facilityTypes: ['ed'],
       autoSeed: true,
       aiProvider: 'gemini',
       aiApiKey: 'test-key',
@@ -546,7 +546,7 @@ describe('createSuggestionProvider', () => {
       enabled: true,
       threshold: 50,
       maxSuggestions: 10,
-      facilityType: 'ed',
+      facilityTypes: ['ed'],
       autoSeed: true,
       aiProvider: 'unknown' as any,
     };

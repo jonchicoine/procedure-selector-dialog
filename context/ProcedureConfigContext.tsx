@@ -244,6 +244,15 @@ function loadSuggestionSettings(): SuggestionSettings {
     const stored = localStorage.getItem(SUGGESTION_SETTINGS_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
+      // Migrate old facilityType to facilityTypes array
+      if (parsed.facilityType && !parsed.facilityTypes) {
+        parsed.facilityTypes = [parsed.facilityType];
+        delete parsed.facilityType;
+      }
+      // Ensure facilityTypes is an array
+      if (!Array.isArray(parsed.facilityTypes)) {
+        parsed.facilityTypes = DEFAULT_SUGGESTION_SETTINGS.facilityTypes;
+      }
       // Merge with defaults to ensure all fields exist
       return { ...DEFAULT_SUGGESTION_SETTINGS, ...parsed };
     }
@@ -417,8 +426,8 @@ interface ProcedureConfigContextType {
   exportPredictionData: () => void;
   /** Import prediction data from file */
   importPredictionData: (file: File) => Promise<void>;
-  /** Generate and apply seed prediction data for a facility type */
-  generateAndApplySeedData: (facilityType: FacilityType, procedures: ProcedureDefinition[]) => void;
+  /** Generate and apply seed prediction data for facility types */
+  generateAndApplySeedData: (facilityTypes: FacilityType[], procedures: ProcedureDefinition[]) => void;
   /** Get statistics about current prediction data */
   getPredictionDataStats: () => { totalProcedures: number; totalPairs: number; totalObservations: number };
   /** Auto-seed prediction data if empty (returns true if seeding was performed) */
@@ -882,7 +891,7 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
     const exportData = {
       version: '1.0',
       exportedAt: new Date().toISOString(),
-      facilityType: suggestionSettings.facilityType,
+      facilityTypes: suggestionSettings.facilityTypes,
       data: predictionData,
       stats: getPredictionStats(predictionData)
     };
@@ -893,12 +902,13 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
     
     const a = document.createElement('a');
     a.href = url;
-    a.download = `prediction-data-${suggestionSettings.facilityType}-${new Date().toISOString().split('T')[0]}.json`;
+    const facilityTypesStr = suggestionSettings.facilityTypes.join('-');
+    a.download = `prediction-data-${facilityTypesStr}-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [predictionData, suggestionSettings.facilityType]);
+  }, [predictionData, suggestionSettings.facilityTypes]);
 
   const importPredictionData = useCallback(async (file: File) => {
     try {
@@ -926,8 +936,8 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
     }
   }, [predictionData]);
 
-  const generateAndApplySeedData = useCallback((facilityType: FacilityType, procedures: ProcedureDefinition[]) => {
-    const seedData = generateSeedPredictions(procedures, [facilityType]);
+  const generateAndApplySeedData = useCallback((facilityTypes: FacilityType[], procedures: ProcedureDefinition[]) => {
+    const seedData = generateSeedPredictions(procedures, facilityTypes);
     const merged = mergePredictionData(predictionData, seedData);
     setPredictionData(merged);
     savePredictionData(merged);
@@ -947,9 +957,9 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
     const stats = getPredictionStats(predictionData);
     console.log('autoSeedIfEmpty called, totalPairs:', stats.totalPairs, 'totalProcedures:', stats.totalProcedures, 'procedures count:', config.procedures.length);
     if (stats.totalPairs === 0) {
-      // No prediction data - auto-seed with the configured facility type
-      console.log('Seeding with', suggestionSettings.facilityType, 'bundles...');
-      const seedData = generateSeedPredictions(config.procedures, [suggestionSettings.facilityType]);
+      // No prediction data - auto-seed with the configured facility types
+      console.log('Seeding with', suggestionSettings.facilityTypes, 'bundles...');
+      const seedData = generateSeedPredictions(config.procedures, suggestionSettings.facilityTypes);
       const seedStats = getPredictionStats(seedData);
       console.log('Seed data generated - totalPairs:', seedStats.totalPairs, 'totalProcedures:', seedStats.totalProcedures);
       setPredictionData(seedData);
@@ -957,7 +967,7 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
       return true; // Indicates seeding was performed
     }
     return false; // Already had data
-  }, [predictionData, config.procedures, suggestionSettings.autoSeed, suggestionSettings.facilityType]);
+  }, [predictionData, config.procedures, suggestionSettings.autoSeed, suggestionSettings.facilityTypes]);
 
   return (
     <ProcedureConfigContext.Provider

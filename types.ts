@@ -151,7 +151,7 @@ export interface PredictionData {
   coOccurrences: Record<string, Record<string, number>>;
   /** Optional metadata about how the data was seeded */
   seededFrom?: {
-    facilityType: FacilityType;
+    facilityTypes: FacilityType[];
     method: 'rules' | 'ai';
     seededAt: string;
   };
@@ -167,8 +167,8 @@ export interface SuggestionSettings {
   threshold: number;
   /** Maximum number of suggestions to show (0-100) */
   maxSuggestions: number;
-  /** Selected facility type for context */
-  facilityType: FacilityType;
+  /** Selected facility types for context (can be multiple, e.g., ED with Observation) */
+  facilityTypes: FacilityType[];
   /** Auto-seed prediction data with clinical bundles if empty */
   autoSeed: boolean;
   /** AI provider for suggestions ('local' uses statistical model only) */
@@ -184,7 +184,7 @@ export const DEFAULT_SUGGESTION_SETTINGS: SuggestionSettings = {
   enabled: true,
   threshold: 50,
   maxSuggestions: 10,
-  facilityType: 'ed',
+  facilityTypes: ['ed'],
   autoSeed: false,
   aiProvider: 'local',
 };

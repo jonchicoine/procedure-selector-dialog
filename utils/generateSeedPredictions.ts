@@ -459,7 +459,7 @@ export function generateSeedPredictions(
   
   // Add metadata about seeding
   predictionData.seededFrom = {
-    facilityType: facilityTypes[0], // Primary facility type
+    facilityTypes: facilityTypes,
     method: 'rules',
     seededAt: new Date().toISOString(),
   };

@@ -4,6 +4,7 @@ import { SaveIcon } from './icons/SaveIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import { PlusIcon } from './icons/PlusIcon';
 import { UploadIcon } from './icons/UploadIcon';
+import { ChevronIcon } from './icons/ChevronIcon';
 import { useProcedureConfig } from '../context/ProcedureConfigContext';
 import { useToast } from './Toast';
 import { ProcedureDefinition, ProcedureFieldDefinition, CategoryDefinition, SubcategoryDefinition, FACILITY_TYPE_LABELS, FacilityType } from '../types';
@@ -130,6 +131,11 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
   // Create new category/subcategory in move modal
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [newItemName, setNewItemName] = useState('');
+  
+  // Prediction data viewer state
+  const [showPredictionViewer, setShowPredictionViewer] = useState(false);
+  const [predictionViewerTab, setPredictionViewerTab] = useState<'procedures' | 'cooccurrences'>('procedures');
+  const [predictionSearchTerm, setPredictionSearchTerm] = useState('');
 
   // Reset state when modal closes
   useEffect(() => {
@@ -153,6 +159,9 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
       setBulkMoveTargetId('');
       setIsCreatingNew(false);
       setNewItemName('');
+      setShowPredictionViewer(false);
+      setPredictionViewerTab('procedures');
+      setPredictionSearchTerm('');
     }
   }, [isOpen]);
 
@@ -250,13 +259,26 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     showToast('Prediction data cleared', 'success');
   };
 
-  const handleSeedPredictions = (facilityType: FacilityType) => {
-    if (!confirm(`Generate seed predictions for ${FACILITY_TYPE_LABELS[facilityType]}? This will add common clinical bundles to your prediction data.`)) {
+  const handleSeedPredictions = () => {
+    if (suggestionSettings.facilityTypes.length === 0) {
+      showToast('Please select at least one facility type', 'error');
       return;
     }
-    generateAndApplySeedData(facilityType, procedures);
+    const facilityTypesLabels = suggestionSettings.facilityTypes.map(ft => FACILITY_TYPE_LABELS[ft]).join(', ');
+    if (!confirm(`Generate seed predictions for ${facilityTypesLabels}? This will add common clinical bundles to your prediction data.`)) {
+      return;
+    }
+    generateAndApplySeedData(suggestionSettings.facilityTypes, procedures);
     const stats = getPredictionDataStats();
     showToast(`Seed data generated: ${stats.totalPairs} procedure pairs`, 'success');
+  };
+
+  const toggleFacilityType = (type: FacilityType) => {
+    const currentTypes = suggestionSettings.facilityTypes;
+    const newTypes = currentTypes.includes(type)
+      ? currentTypes.filter(t => t !== type)
+      : [...currentTypes, type];
+    updateSuggestionSettings({ facilityTypes: newTypes });
   };
 
   // GitHub publish handler
@@ -1755,17 +1777,17 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
 
           {/* Facility Type */}
           <div className="bg-slate-700/50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-slate-300 mb-3">Facility Type</h4>
+            <h4 className="text-sm font-medium text-slate-300 mb-3">Facility Types</h4>
             <p className="text-xs text-slate-400 mb-3">
-              Used for seed data generation. Select your facility type to get relevant clinical bundles.
+              Select one or more facility types (e.g., ED with Observation). Used for seed data generation to get relevant clinical bundles.
             </p>
             <div className="grid grid-cols-2 gap-2">
               {(Object.keys(FACILITY_TYPE_LABELS) as FacilityType[]).map((type) => (
                 <button
                   key={type}
-                  onClick={() => updateSuggestionSettings({ facilityType: type })}
+                  onClick={() => toggleFacilityType(type)}
                   className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                    suggestionSettings.facilityType === type
+                    suggestionSettings.facilityTypes.includes(type)
                       ? 'bg-indigo-600 border-indigo-500 text-white'
                       : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-500'
                   }`}
@@ -1774,6 +1796,9 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
                 </button>
               ))}
             </div>
+            {suggestionSettings.facilityTypes.length === 0 && (
+              <p className="text-xs text-yellow-400 mt-2">⚠️ At least one facility type must be selected</p>
+            )}
           </div>
 
           {/* Auto-Seed Toggle */}
@@ -1844,20 +1869,169 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
           <div className="bg-slate-700/50 rounded-lg p-4">
             <h4 className="text-sm font-medium text-slate-300 mb-2">Generate Seed Data</h4>
             <p className="text-xs text-slate-400 mb-3">
-              Pre-populate prediction data with common clinical bundles. This adds procedure pairs that commonly occur together in specific clinical scenarios (e.g., Trauma Resuscitation, Cardiac Arrest, Airway Management).
+              Pre-populate prediction data with common clinical bundles for your selected facility types. This adds procedure pairs that commonly occur together in specific clinical scenarios (e.g., Trauma Resuscitation, Cardiac Arrest, Airway Management).
             </p>
-            <div className="grid grid-cols-2 gap-2">
-              {(Object.keys(FACILITY_TYPE_LABELS) as FacilityType[]).map((type) => (
-                <button
-                  key={`seed-${type}`}
-                  onClick={() => handleSeedPredictions(type)}
-                  className="px-3 py-2 text-sm bg-green-600/30 hover:bg-green-600/50 text-green-400 border border-green-600/50 rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  <PlusIcon className="w-4 h-4" />
-                  Seed {FACILITY_TYPE_LABELS[type]}
-                </button>
-              ))}
-            </div>
+            <button
+              onClick={handleSeedPredictions}
+              disabled={suggestionSettings.facilityTypes.length === 0}
+              className="w-full px-4 py-2 text-sm bg-green-600/30 hover:bg-green-600/50 disabled:bg-slate-600/30 disabled:text-slate-500 disabled:cursor-not-allowed text-green-400 border border-green-600/50 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Generate Seed Data for Selected Facility Types
+            </button>
+          </div>
+
+          {/* Prediction Data Viewer */}
+          <div className="bg-slate-700/50 rounded-lg p-4">
+            <button
+              onClick={() => setShowPredictionViewer(!showPredictionViewer)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <div>
+                <h4 className="text-sm font-medium text-slate-300">View Prediction Data</h4>
+                <p className="text-xs text-slate-400 mt-1">
+                  Inspect tracked procedures and co-occurrence patterns.
+                </p>
+              </div>
+              <ChevronIcon 
+                className={`w-5 h-5 text-slate-400 transition-transform ${showPredictionViewer ? 'rotate-180' : ''}`}
+              />
+            </button>
+            
+            {showPredictionViewer && (
+              <div className="mt-4 space-y-4">
+                {/* Tab buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPredictionViewerTab('procedures')}
+                    className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
+                      predictionViewerTab === 'procedures'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    Procedures ({Object.keys(predictionData.procedureAddCounts).length})
+                  </button>
+                  <button
+                    onClick={() => setPredictionViewerTab('cooccurrences')}
+                    className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
+                      predictionViewerTab === 'cooccurrences'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    Co-occurrences ({Object.keys(predictionData.coOccurrences).length})
+                  </button>
+                </div>
+                
+                {/* Search */}
+                <input
+                  type="text"
+                  placeholder="Search procedures..."
+                  value={predictionSearchTerm}
+                  onChange={(e) => setPredictionSearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                />
+                
+                {/* Content */}
+                <div className="max-h-64 overflow-y-auto bg-slate-800 rounded-lg">
+                  {predictionViewerTab === 'procedures' ? (
+                    // Procedures list
+                    (() => {
+                      const sortedProcedures = Object.entries(predictionData.procedureAddCounts)
+                        .filter(([name]) => name.toLowerCase().includes(predictionSearchTerm.toLowerCase()))
+                        .sort((a, b) => b[1] - a[1]);
+                      
+                      if (sortedProcedures.length === 0) {
+                        return (
+                          <div className="p-4 text-center text-slate-400 text-sm">
+                            {predictionSearchTerm ? 'No procedures match your search.' : 'No procedure data yet.'}
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-700 sticky top-0">
+                            <tr>
+                              <th className="text-left px-3 py-2 text-slate-300 font-medium">Procedure</th>
+                              <th className="text-right px-3 py-2 text-slate-300 font-medium w-24">Add Count</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sortedProcedures.map(([procName, count]) => (
+                              <tr key={procName} className="border-t border-slate-700 hover:bg-slate-700/50">
+                                <td className="px-3 py-2 text-slate-200 font-mono text-xs">{procName}</td>
+                                <td className="px-3 py-2 text-right text-indigo-400">{count}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      );
+                    })()
+                  ) : (
+                    // Co-occurrences list
+                    (() => {
+                      const coOccList: Array<{ procA: string; procB: string; count: number }> = [];
+                      for (const [procA, coOccs] of Object.entries(predictionData.coOccurrences)) {
+                        for (const [procB, count] of Object.entries(coOccs)) {
+                          if (
+                            procA.toLowerCase().includes(predictionSearchTerm.toLowerCase()) ||
+                            procB.toLowerCase().includes(predictionSearchTerm.toLowerCase())
+                          ) {
+                            coOccList.push({ procA, procB, count });
+                          }
+                        }
+                      }
+                      coOccList.sort((a, b) => b.count - a.count);
+                      
+                      if (coOccList.length === 0) {
+                        return (
+                          <div className="p-4 text-center text-slate-400 text-sm">
+                            {predictionSearchTerm ? 'No co-occurrences match your search.' : 'No co-occurrence data yet.'}
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-700 sticky top-0">
+                            <tr>
+                              <th className="text-left px-3 py-2 text-slate-300 font-medium">When Added</th>
+                              <th className="text-left px-3 py-2 text-slate-300 font-medium">Was Present</th>
+                              <th className="text-right px-3 py-2 text-slate-300 font-medium w-20">Count</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {coOccList.slice(0, 100).map(({ procA, procB, count }, idx) => (
+                              <tr key={`${procA}-${procB}-${idx}`} className="border-t border-slate-700 hover:bg-slate-700/50">
+                                <td className="px-3 py-2 text-slate-200 font-mono text-xs">{procA}</td>
+                                <td className="px-3 py-2 text-cyan-400 font-mono text-xs">{procB}</td>
+                                <td className="px-3 py-2 text-right text-green-400">{count}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      );
+                    })()
+                  )}
+                </div>
+                
+                {/* Seeded from info */}
+                {predictionData.seededFrom && (
+                  <div className="text-xs text-slate-500 flex items-center gap-2">
+                    <span>Seeded from:</span>
+                    <span className="text-slate-400">
+                      {predictionData.seededFrom.facilityTypes.map(ft => FACILITY_TYPE_LABELS[ft]).join(', ')}
+                    </span>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-slate-400">
+                      {new Date(predictionData.seededFrom.seededAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* AI Provider (Future) */}
