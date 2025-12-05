@@ -1,6 +1,18 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
-import { ProcedureConfig, ProcedureDefinition, CategoryDefinition, SubcategoryDefinition } from '../types';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef, ReactNode } from 'react';
+import { 
+  ProcedureConfig, 
+  ProcedureDefinition, 
+  CategoryDefinition, 
+  SubcategoryDefinition,
+  PredictionData,
+  SuggestionSettings,
+  ProcedureSuggestion,
+  FacilityType,
+  DEFAULT_SUGGESTION_SETTINGS
+} from '../types';
 import { parseConfigJson, configToJson } from '../utils/migrateProcedures';
+import { createSuggestionProvider } from '../utils/aiSuggestionProvider';
+import { generateSeedPredictions, mergePredictionData, createEmptyPredictionData, getPredictionStats } from '../utils/generateSeedPredictions';
 
 // Import the default config
 import defaultConfig from '../procedures.json';
@@ -14,6 +26,11 @@ const RECENTS_KEY = 'procedure-recents';
 const MAX_RECENTS = 10;
 const USAGE_COUNTS_KEY = 'procedure-usage-counts';
 const MAX_MOST_USED = 20;
+const PREDICTION_DATA_KEY = 'procedure-prediction-data';
+const SUGGESTION_SETTINGS_KEY = 'procedure-suggestion-settings';
+
+// Debounce delay for saving prediction data (ms)
+const PREDICTION_SAVE_DEBOUNCE = 500;
 
 /**
  * Load config from localStorage if available, otherwise return null
@@ -189,6 +206,65 @@ function saveUsageCounts(counts: Record<string, number>): void {
 }
 
 /**
+ * Load prediction data from localStorage
+ */
+function loadPredictionData(): PredictionData {
+  try {
+    const stored = localStorage.getItem(PREDICTION_DATA_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Validate structure
+      if (parsed && typeof parsed === 'object' && 
+          parsed.procedureAddCounts && parsed.coOccurrences) {
+        return parsed as PredictionData;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load prediction data from localStorage:', e);
+  }
+  return createEmptyPredictionData();
+}
+
+/**
+ * Save prediction data to localStorage
+ */
+function savePredictionData(data: PredictionData): void {
+  try {
+    localStorage.setItem(PREDICTION_DATA_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.warn('Failed to save prediction data to localStorage:', e);
+  }
+}
+
+/**
+ * Load suggestion settings from localStorage
+ */
+function loadSuggestionSettings(): SuggestionSettings {
+  try {
+    const stored = localStorage.getItem(SUGGESTION_SETTINGS_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Merge with defaults to ensure all fields exist
+      return { ...DEFAULT_SUGGESTION_SETTINGS, ...parsed };
+    }
+  } catch (e) {
+    console.warn('Failed to load suggestion settings from localStorage:', e);
+  }
+  return { ...DEFAULT_SUGGESTION_SETTINGS };
+}
+
+/**
+ * Save suggestion settings to localStorage
+ */
+function saveSuggestionSettings(settings: SuggestionSettings): void {
+  try {
+    localStorage.setItem(SUGGESTION_SETTINGS_KEY, JSON.stringify(settings));
+  } catch (e) {
+    console.warn('Failed to save suggestion settings to localStorage:', e);
+  }
+}
+
+/**
  * Get initial config: try localStorage first, fall back to default
  */
 function getInitialConfig(): ProcedureConfig {
@@ -323,6 +399,30 @@ interface ProcedureConfigContextType {
   getUsageCount: (controlName: string) => number;
   /** Clear all usage data */
   clearUsageCounts: () => void;
+  
+  // Prediction and suggestion system
+  /** Current prediction data (co-occurrence tracking) */
+  predictionData: PredictionData;
+  /** Current suggestion settings */
+  suggestionSettings: SuggestionSettings;
+  /** Update suggestion settings */
+  updateSuggestionSettings: (settings: Partial<SuggestionSettings>) => void;
+  /** Record co-occurrence when a procedure is added to a session */
+  recordCoOccurrence: (newProcedureId: string, sessionProcedureIds: string[]) => void;
+  /** Get suggestions based on current session procedures */
+  getSuggestionsForSession: (sessionProcedureIds: string[]) => ProcedureSuggestion[];
+  /** Clear all prediction data */
+  clearPredictionData: () => void;
+  /** Export prediction data as JSON */
+  exportPredictionData: () => void;
+  /** Import prediction data from file */
+  importPredictionData: (file: File) => Promise<void>;
+  /** Generate and apply seed prediction data for a facility type */
+  generateAndApplySeedData: (facilityType: FacilityType, procedures: ProcedureDefinition[]) => void;
+  /** Get statistics about current prediction data */
+  getPredictionDataStats: () => { totalProcedures: number; totalPairs: number; totalObservations: number };
+  /** Auto-seed prediction data if empty (returns true if seeding was performed) */
+  autoSeedIfEmpty: () => boolean;
 }
 
 const ProcedureConfigContext = createContext<ProcedureConfigContextType | null>(null);
@@ -343,6 +443,13 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
   const [subcategoryFavorites, setSubcategoryFavorites] = useState<Set<string>>(loadSubcategoryFavorites);
   const [recentControlNames, setRecentControlNames] = useState<string[]>(loadRecents);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>(loadUsageCounts);
+  
+  // Prediction and suggestion state
+  const [predictionData, setPredictionData] = useState<PredictionData>(loadPredictionData);
+  const [suggestionSettings, setSuggestionSettings] = useState<SuggestionSettings>(loadSuggestionSettings);
+  
+  // Debounce timer ref for saving prediction data
+  const predictionSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Save to localStorage whenever config changes
   useEffect(() => {
@@ -661,6 +768,197 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
     saveUsageCounts({});
   }, []);
 
+  // Prediction and suggestion functions
+  
+  // Create procedure lookup map for suggestions
+  const procedureLookupMap = useMemo(() => {
+    const map = new Map<string, ProcedureDefinition>();
+    for (const proc of config.procedures) {
+      map.set(proc.controlName, proc);
+    }
+    return map;
+  }, [config.procedures]);
+
+  // Debounced save for prediction data
+  const debouncedSavePredictionData = useCallback((data: PredictionData) => {
+    if (predictionSaveTimerRef.current) {
+      clearTimeout(predictionSaveTimerRef.current);
+    }
+    predictionSaveTimerRef.current = setTimeout(() => {
+      savePredictionData(data);
+      predictionSaveTimerRef.current = null;
+    }, PREDICTION_SAVE_DEBOUNCE);
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (predictionSaveTimerRef.current) {
+        clearTimeout(predictionSaveTimerRef.current);
+      }
+    };
+  }, []);
+
+  const updateSuggestionSettings = useCallback((updates: Partial<SuggestionSettings>) => {
+    setSuggestionSettings(prev => {
+      const next = { ...prev, ...updates };
+      saveSuggestionSettings(next);
+      return next;
+    });
+  }, []);
+
+  const recordCoOccurrence = useCallback((newProcedureId: string, sessionProcedureIds: string[]) => {
+    console.log('recordCoOccurrence called:', newProcedureId, 'with session:', sessionProcedureIds);
+    
+    setPredictionData(prev => {
+      const next = { ...prev };
+      
+      // Deep clone the nested objects
+      next.procedureAddCounts = { ...prev.procedureAddCounts };
+      next.coOccurrences = { ...prev.coOccurrences };
+      
+      // Increment the add count for the new procedure
+      next.procedureAddCounts[newProcedureId] = (next.procedureAddCounts[newProcedureId] || 0) + 1;
+      
+      // Record co-occurrence with each existing procedure in session
+      for (const existingId of sessionProcedureIds) {
+        if (existingId === newProcedureId) continue;
+        
+        // Also increment add count for existing procedure (it's part of this co-occurrence)
+        next.procedureAddCounts[existingId] = (next.procedureAddCounts[existingId] || 0) + 1;
+        
+        // Create BIDIRECTIONAL co-occurrence entries
+        // existingId -> newProcedureId (existing predicts new)
+        if (!next.coOccurrences[existingId]) {
+          next.coOccurrences[existingId] = {};
+        }
+        next.coOccurrences[existingId] = { ...next.coOccurrences[existingId] };
+        next.coOccurrences[existingId][newProcedureId] = 
+          (next.coOccurrences[existingId][newProcedureId] || 0) + 1;
+        
+        // newProcedureId -> existingId (new predicts existing)
+        if (!next.coOccurrences[newProcedureId]) {
+          next.coOccurrences[newProcedureId] = {};
+        }
+        next.coOccurrences[newProcedureId] = { ...next.coOccurrences[newProcedureId] };
+        next.coOccurrences[newProcedureId][existingId] = 
+          (next.coOccurrences[newProcedureId][existingId] || 0) + 1;
+      }
+      
+      console.log('Updated prediction data:', {
+        procedureAddCounts: next.procedureAddCounts,
+        coOccurrencePairs: Object.keys(next.coOccurrences).length
+      });
+      
+      // Debounced save
+      debouncedSavePredictionData(next);
+      
+      return next;
+    });
+  }, [debouncedSavePredictionData]);
+
+  const getSuggestionsForSession = useCallback((sessionProcedureIds: string[]): ProcedureSuggestion[] => {
+    if (!suggestionSettings.enabled || sessionProcedureIds.length === 0) {
+      return [];
+    }
+    
+    const provider = createSuggestionProvider(suggestionSettings);
+    return provider.getSuggestions(
+      sessionProcedureIds,
+      config.procedures,
+      predictionData,
+      suggestionSettings.threshold,
+      suggestionSettings.maxSuggestions
+    );
+  }, [suggestionSettings, predictionData, config.procedures]);
+
+  const clearPredictionData = useCallback(() => {
+    const empty = createEmptyPredictionData();
+    setPredictionData(empty);
+    savePredictionData(empty);
+  }, []);
+
+  const exportPredictionData = useCallback(() => {
+    const exportData = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      facilityType: suggestionSettings.facilityType,
+      data: predictionData,
+      stats: getPredictionStats(predictionData)
+    };
+    
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `prediction-data-${suggestionSettings.facilityType}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [predictionData, suggestionSettings.facilityType]);
+
+  const importPredictionData = useCallback(async (file: File) => {
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      
+      // Handle both direct prediction data and wrapped export format
+      let importData: PredictionData;
+      if (parsed.data && parsed.data.procedureAddCounts && parsed.data.coOccurrences) {
+        importData = parsed.data;
+      } else if (parsed.procedureAddCounts && parsed.coOccurrences) {
+        importData = parsed;
+      } else {
+        throw new Error('Invalid prediction data format');
+      }
+      
+      // Merge with existing data
+      const merged = mergePredictionData(predictionData, importData);
+      setPredictionData(merged);
+      savePredictionData(merged);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Failed to import prediction data';
+      setError(message);
+      throw e;
+    }
+  }, [predictionData]);
+
+  const generateAndApplySeedData = useCallback((facilityType: FacilityType, procedures: ProcedureDefinition[]) => {
+    const seedData = generateSeedPredictions(procedures, [facilityType]);
+    const merged = mergePredictionData(predictionData, seedData);
+    setPredictionData(merged);
+    savePredictionData(merged);
+  }, [predictionData]);
+
+  const getPredictionDataStats = useCallback(() => {
+    return getPredictionStats(predictionData);
+  }, [predictionData]);
+
+  // Auto-seed prediction data if empty (called when opening procedure selection)
+  const autoSeedIfEmpty = useCallback(() => {
+    // Check if auto-seeding is enabled
+    if (!suggestionSettings.autoSeed) {
+      return false;
+    }
+    
+    const stats = getPredictionStats(predictionData);
+    console.log('autoSeedIfEmpty called, totalPairs:', stats.totalPairs, 'totalProcedures:', stats.totalProcedures, 'procedures count:', config.procedures.length);
+    if (stats.totalPairs === 0) {
+      // No prediction data - auto-seed with the configured facility type
+      console.log('Seeding with', suggestionSettings.facilityType, 'bundles...');
+      const seedData = generateSeedPredictions(config.procedures, [suggestionSettings.facilityType]);
+      const seedStats = getPredictionStats(seedData);
+      console.log('Seed data generated - totalPairs:', seedStats.totalPairs, 'totalProcedures:', seedStats.totalProcedures);
+      setPredictionData(seedData);
+      savePredictionData(seedData);
+      return true; // Indicates seeding was performed
+    }
+    return false; // Already had data
+  }, [predictionData, config.procedures, suggestionSettings.autoSeed, suggestionSettings.facilityType]);
+
   return (
     <ProcedureConfigContext.Provider
       value={{
@@ -726,6 +1024,18 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
         getMostUsedProcedures,
         getUsageCount,
         clearUsageCounts,
+        
+        predictionData,
+        suggestionSettings,
+        updateSuggestionSettings,
+        recordCoOccurrence,
+        getSuggestionsForSession,
+        clearPredictionData,
+        exportPredictionData,
+        importPredictionData,
+        generateAndApplySeedData,
+        getPredictionDataStats,
+        autoSeedIfEmpty,
       }}
     >
       {children}

@@ -6,7 +6,7 @@ import { PlusIcon } from './icons/PlusIcon';
 import { UploadIcon } from './icons/UploadIcon';
 import { useProcedureConfig } from '../context/ProcedureConfigContext';
 import { useToast } from './Toast';
-import { ProcedureDefinition, ProcedureFieldDefinition, CategoryDefinition, SubcategoryDefinition } from '../types';
+import { ProcedureDefinition, ProcedureFieldDefinition, CategoryDefinition, SubcategoryDefinition, FACILITY_TYPE_LABELS, FacilityType } from '../types';
 import { publishToGitHub, getStoredToken, storeToken, clearStoredToken, validateGitHubToken } from '../utils/githubApi';
 
 interface ConfigEditorModalProps {
@@ -14,7 +14,7 @@ interface ConfigEditorModalProps {
   onClose: () => void;
 }
 
-type EditorTab = 'procedures' | 'categories' | 'subcategories';
+type EditorTab = 'procedures' | 'categories' | 'subcategories' | 'suggestions';
 
 const FIELD_TYPES: Array<{ value: ProcedureFieldDefinition['type']; label: string }> = [
   { value: 'list', label: 'Dropdown List' },
@@ -83,11 +83,21 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     addSubcategory,
     deleteSubcategory,
     error, 
-    clearError 
+    clearError,
+    // Suggestion settings
+    suggestionSettings,
+    updateSuggestionSettings,
+    predictionData,
+    clearPredictionData,
+    exportPredictionData,
+    importPredictionData,
+    generateAndApplySeedData,
+    getPredictionDataStats,
   } = useProcedureConfig();
   
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const predictionFileInputRef = useRef<HTMLInputElement>(null);
   
   const [activeTab, setActiveTab] = useState<EditorTab>('procedures');
   const [searchTerm, setSearchTerm] = useState('');
@@ -203,6 +213,50 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
     } catch {
       showToast('Failed to export configuration', 'error');
     }
+  };
+
+  // Prediction data handlers
+  const handlePredictionImportClick = () => {
+    predictionFileInputRef.current?.click();
+  };
+
+  const handlePredictionFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        await importPredictionData(file);
+        showToast('Prediction data imported successfully', 'success');
+      } catch {
+        showToast('Failed to import prediction data', 'error');
+      }
+    }
+    e.target.value = '';
+  };
+
+  const handleExportPredictions = () => {
+    try {
+      exportPredictionData();
+      showToast('Prediction data exported successfully', 'success');
+    } catch {
+      showToast('Failed to export prediction data', 'error');
+    }
+  };
+
+  const handleClearPredictions = () => {
+    if (!confirm('Clear all prediction data? This will reset all learned patterns. This cannot be undone.')) {
+      return;
+    }
+    clearPredictionData();
+    showToast('Prediction data cleared', 'success');
+  };
+
+  const handleSeedPredictions = (facilityType: FacilityType) => {
+    if (!confirm(`Generate seed predictions for ${FACILITY_TYPE_LABELS[facilityType]}? This will add common clinical bundles to your prediction data.`)) {
+      return;
+    }
+    generateAndApplySeedData(facilityType, procedures);
+    const stats = getPredictionDataStats();
+    showToast(`Seed data generated: ${stats.totalPairs} procedure pairs`, 'success');
   };
 
   // GitHub publish handler
@@ -1598,6 +1652,233 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
   );
   };
 
+  const renderSuggestionsTab = () => {
+    const stats = getPredictionDataStats();
+    
+    return (
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Header */}
+          <div>
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+              </svg>
+              AI Suggestions
+            </h3>
+            <p className="text-sm text-slate-400 mt-1">
+              Configure procedure suggestions based on usage patterns and clinical bundles.
+            </p>
+          </div>
+
+          {/* Enable/Disable Toggle */}
+          <div className="bg-slate-700/50 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-medium text-slate-300">Enable Suggestions</h4>
+                <p className="text-xs text-slate-400 mt-1">
+                  Show AI-powered procedure suggestions based on what's in your current session.
+                </p>
+              </div>
+              <button
+                onClick={() => updateSuggestionSettings({ enabled: !suggestionSettings.enabled })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  suggestionSettings.enabled ? 'bg-indigo-600' : 'bg-slate-600'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    suggestionSettings.enabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Confidence Threshold Slider */}
+          <div className="bg-slate-700/50 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="text-sm font-medium text-slate-300">Confidence Threshold</h4>
+                <p className="text-xs text-slate-400 mt-1">
+                  Only show suggestions above this confidence level.
+                </p>
+              </div>
+              <span className="text-lg font-semibold text-indigo-400">
+                {suggestionSettings.threshold}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={suggestionSettings.threshold}
+              onChange={(e) => updateSuggestionSettings({ threshold: parseInt(e.target.value) })}
+              className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+            />
+            <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <span>0% (show all)</span>
+              <span>50%</span>
+              <span>100% (strict)</span>
+            </div>
+          </div>
+
+          {/* Max Suggestions Slider */}
+          <div className="bg-slate-700/50 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="text-sm font-medium text-slate-300">Max Suggestions</h4>
+                <p className="text-xs text-slate-400 mt-1">
+                  Maximum number of suggested procedures to display.
+                </p>
+              </div>
+              <span className="text-lg font-semibold text-indigo-400">
+                {suggestionSettings.maxSuggestions === 0 ? 'Off' : suggestionSettings.maxSuggestions}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={suggestionSettings.maxSuggestions}
+              onChange={(e) => updateSuggestionSettings({ maxSuggestions: parseInt(e.target.value) })}
+              className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+            />
+            <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <span>0 (off)</span>
+              <span>50</span>
+              <span>100</span>
+            </div>
+          </div>
+
+          {/* Facility Type */}
+          <div className="bg-slate-700/50 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-slate-300 mb-3">Facility Type</h4>
+            <p className="text-xs text-slate-400 mb-3">
+              Used for seed data generation. Select your facility type to get relevant clinical bundles.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {(Object.keys(FACILITY_TYPE_LABELS) as FacilityType[]).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => updateSuggestionSettings({ facilityType: type })}
+                  className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                    suggestionSettings.facilityType === type
+                      ? 'bg-indigo-600 border-indigo-500 text-white'
+                      : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-500'
+                  }`}
+                >
+                  {FACILITY_TYPE_LABELS[type]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Auto-Seed Toggle */}
+          <div className="bg-slate-700/50 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-medium text-slate-300">Auto-Seed Data</h4>
+                <p className="text-xs text-slate-400 mt-1">
+                  Automatically populate prediction data with clinical bundles when empty.
+                </p>
+              </div>
+              <button
+                onClick={() => updateSuggestionSettings({ autoSeed: !suggestionSettings.autoSeed })}
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  suggestionSettings.autoSeed ? 'bg-indigo-600' : 'bg-slate-600'
+                }`}
+              >
+                <span
+                  className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                    suggestionSettings.autoSeed ? 'translate-x-6' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Prediction Data Stats */}
+          <div className="bg-slate-700/50 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-slate-300 mb-3">Prediction Data</h4>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="bg-slate-800 rounded-lg p-3 text-center">
+                <div className="text-2xl font-semibold text-indigo-400">{stats.totalProcedures}</div>
+                <div className="text-xs text-slate-400">Tracked Procedures</div>
+              </div>
+              <div className="bg-slate-800 rounded-lg p-3 text-center">
+                <div className="text-2xl font-semibold text-cyan-400">{stats.totalPairs}</div>
+                <div className="text-xs text-slate-400">Co-occurrence Pairs</div>
+              </div>
+              <div className="bg-slate-800 rounded-lg p-3 text-center">
+                <div className="text-2xl font-semibold text-green-400">{stats.totalObservations}</div>
+                <div className="text-xs text-slate-400">Total Observations</div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={handleExportPredictions}
+                className="flex-1 px-3 py-2 text-sm bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-colors"
+              >
+                Export Data
+              </button>
+              <button
+                onClick={handlePredictionImportClick}
+                className="flex-1 px-3 py-2 text-sm bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-colors"
+              >
+                Import Data
+              </button>
+              <button
+                onClick={handleClearPredictions}
+                className="px-3 py-2 text-sm bg-red-600/30 hover:bg-red-600/50 text-red-400 rounded-lg transition-colors"
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
+
+          {/* Seed Data Generation */}
+          <div className="bg-slate-700/50 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-slate-300 mb-2">Generate Seed Data</h4>
+            <p className="text-xs text-slate-400 mb-3">
+              Pre-populate prediction data with common clinical bundles. This adds procedure pairs that commonly occur together in specific clinical scenarios (e.g., Trauma Resuscitation, Cardiac Arrest, Airway Management).
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {(Object.keys(FACILITY_TYPE_LABELS) as FacilityType[]).map((type) => (
+                <button
+                  key={`seed-${type}`}
+                  onClick={() => handleSeedPredictions(type)}
+                  className="px-3 py-2 text-sm bg-green-600/30 hover:bg-green-600/50 text-green-400 border border-green-600/50 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Seed {FACILITY_TYPE_LABELS[type]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* AI Provider (Future) */}
+          <div className="bg-slate-700/50 rounded-lg p-4 opacity-60">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                  AI Provider
+                  <span className="text-xs bg-slate-600 text-slate-400 px-2 py-0.5 rounded">Coming Soon</span>
+                </h4>
+                <p className="text-xs text-slate-400 mt-1">
+                  Currently using local statistical analysis. Gemini AI integration coming in a future update.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col border border-slate-700">
@@ -1609,6 +1890,13 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
+              accept=".json"
+              className="hidden"
+            />
+            <input
+              type="file"
+              ref={predictionFileInputRef}
+              onChange={handlePredictionFileChange}
               accept=".json"
               className="hidden"
             />
@@ -1665,7 +1953,7 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
 
         {/* Tabs */}
         <div className="flex border-b border-slate-700">
-          {(['procedures', 'categories', 'subcategories'] as EditorTab[]).map((tab) => (
+          {(['procedures', 'categories', 'subcategories', 'suggestions'] as EditorTab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => handleTabChange(tab)}
@@ -1676,9 +1964,11 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
               }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              <span className="ml-2 text-xs text-slate-500">
-                ({tab === 'procedures' ? procedures.length : tab === 'categories' ? categories.length : subcategories.length})
-              </span>
+              {tab !== 'suggestions' && (
+                <span className="ml-2 text-xs text-slate-500">
+                  ({tab === 'procedures' ? procedures.length : tab === 'categories' ? categories.length : subcategories.length})
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -1713,6 +2003,7 @@ export const ConfigEditorModal: React.FC<ConfigEditorModalProps> = ({ isOpen, on
               {renderSubcategoryEditor()}
             </>
           )}
+          {activeTab === 'suggestions' && renderSuggestionsTab()}
         </div>
       </div>
 

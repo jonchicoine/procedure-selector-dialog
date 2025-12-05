@@ -9,7 +9,7 @@ import { EditIcon } from './components/icons/EditIcon';
 import { GearIcon } from './components/icons/GearIcon';
 
 const App: React.FC = () => {
-  const { error, clearError, getCategoryName, getSubcategoryName } = useProcedureConfig();
+  const { error, clearError, getCategoryName, getSubcategoryName, recordCoOccurrence } = useProcedureConfig();
   
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -21,17 +21,26 @@ const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
   const [currentPhysician, setCurrentPhysician] = useState(PHYSICIANS[0]);
 
+  // Get the controlNames of procedures in the current session for co-occurrence tracking
+  const sessionProcedureIds = selectedProcedures.map(p => p.controlName);
+
   const handleSelectProcedure = (procedure: SelectedProcedure, keepOpen: boolean = false) => {
-    setSelectedProcedures(prev => {
-      // Prevent adding duplicates based on controlName and first field value
-      const firstFieldValue = Object.values(procedure.fieldValues)[0];
-      const isDuplicate = prev.some(p => 
-        p.controlName === procedure.controlName && 
-        Object.values(p.fieldValues)[0] === firstFieldValue
-      );
-      if (isDuplicate) return prev;
-      return [...prev, procedure];
-    });
+    // Prevent adding duplicates based on controlName and first field value
+    const firstFieldValue = Object.values(procedure.fieldValues)[0];
+    const isDuplicate = selectedProcedures.some(p => 
+      p.controlName === procedure.controlName && 
+      Object.values(p.fieldValues)[0] === firstFieldValue
+    );
+    if (isDuplicate) return;
+    
+    // Record co-occurrence with existing procedures in session BEFORE adding
+    const existingIds = selectedProcedures.map(p => p.controlName);
+    if (existingIds.length > 0) {
+      recordCoOccurrence(procedure.controlName, existingIds);
+    }
+    
+    // Now add the procedure
+    setSelectedProcedures(prev => [...prev, procedure]);
 
     if (!keepOpen) {
       setIsSelectionModalOpen(false);
@@ -189,6 +198,7 @@ const App: React.FC = () => {
         onSelect={handleSelectProcedure}
         currentDate={currentDate}
         currentPhysician={currentPhysician}
+        sessionProcedureIds={sessionProcedureIds}
       />
 
       <EditProcedureModal

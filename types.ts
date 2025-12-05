@@ -116,3 +116,97 @@ export interface SelectedProcedure {
   /** Physician who performed the procedure */
   physician: string;
 }
+
+// ============================================
+// Prediction and Suggestion Types
+// ============================================
+
+/**
+ * Facility types for clinical context and seed data generation.
+ */
+export type FacilityType = 'ed' | 'observation' | 'urgent-care' | 'infusion-center';
+
+/**
+ * Display names for facility types.
+ */
+export const FACILITY_TYPE_LABELS: Record<FacilityType, string> = {
+  'ed': 'Emergency Department',
+  'observation': 'Observation Unit',
+  'urgent-care': 'Urgent Care Clinic',
+  'infusion-center': 'Infusion Center',
+};
+
+/**
+ * Stores learned co-occurrence patterns for procedure suggestions.
+ */
+export interface PredictionData {
+  /** Schema version for future migrations */
+  version: string;
+  /** Count of times each procedure has been added (denominator for confidence) */
+  procedureAddCounts: Record<string, number>;
+  /** 
+   * Pairwise co-occurrence counts.
+   * coOccurrences[A][B] = number of times B was in the session when A was added
+   */
+  coOccurrences: Record<string, Record<string, number>>;
+  /** Optional metadata about how the data was seeded */
+  seededFrom?: {
+    facilityType: FacilityType;
+    method: 'rules' | 'ai';
+    seededAt: string;
+  };
+}
+
+/**
+ * User settings for the suggestion feature.
+ */
+export interface SuggestionSettings {
+  /** Whether suggestions are enabled */
+  enabled: boolean;
+  /** Confidence threshold (0-100) - only show suggestions above this % */
+  threshold: number;
+  /** Maximum number of suggestions to show (0-100) */
+  maxSuggestions: number;
+  /** Selected facility type for context */
+  facilityType: FacilityType;
+  /** Auto-seed prediction data with clinical bundles if empty */
+  autoSeed: boolean;
+  /** AI provider for suggestions ('local' uses statistical model only) */
+  aiProvider: 'local' | 'gemini';
+  /** API key for AI provider (only needed for non-local providers) */
+  aiApiKey?: string;
+}
+
+/**
+ * Default suggestion settings.
+ */
+export const DEFAULT_SUGGESTION_SETTINGS: SuggestionSettings = {
+  enabled: true,
+  threshold: 50,
+  maxSuggestions: 10,
+  facilityType: 'ed',
+  autoSeed: false,
+  aiProvider: 'local',
+};
+
+/**
+ * A suggestion with its confidence score.
+ */
+export interface ProcedureSuggestion {
+  /** The suggested procedure */
+  procedure: ProcedureDefinition;
+  /** Combined confidence score (0-100) from all contributing procedures */
+  confidence: number;
+  /** Total co-occurrence count across all contributing procedures */
+  coOccurrenceCount: number;
+  /** Number of procedures in the session that contributed to this suggestion */
+  contributingProcedures?: number;
+}
+
+/**
+ * Extended config that includes prediction data for export/import.
+ */
+export interface ProcedureConfigWithPredictions extends ProcedureConfig {
+  /** Optional prediction data included in exports */
+  predictionData?: PredictionData;
+}

@@ -15,6 +15,7 @@ interface ProcedureSelectionModalProps {
   onSelect: (procedure: SelectedProcedure, keepOpen?: boolean) => void;
   currentDate: string;
   currentPhysician: string;
+  sessionProcedureIds?: string[];
 }
 
 // Grouped by categoryId, then subcategoryId
@@ -34,6 +35,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   onSelect,
   currentDate,
   currentPhysician,
+  sessionProcedureIds = [],
 }) => {
   const { 
     procedures, 
@@ -63,6 +65,10 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     // Usage tracking
     incrementUsage,
     getMostUsedProcedures,
+    // Suggestions
+    getSuggestionsForSession,
+    suggestionSettings,
+    autoSeedIfEmpty,
   } = useProcedureConfig();
   
   const [searchTokens, setSearchTokens] = useState<SearchToken[]>([]);
@@ -71,7 +77,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   const [keepOpen, setKeepOpen] = useState(false);
   const [preserveFilters, setPreserveFilters] = useState(false);
   const [filterOnExpand, setFilterOnExpand] = useState(true);
-  const [flatView, setFlatView] = useState(false);
+  const [flatView, setFlatView] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // State for field values when a procedure with fields is selected
@@ -88,9 +94,16 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
   const [showBodyPartFilters, setShowBodyPartFilters] = useState(false);
   const [showFavorites, setShowFavorites] = useState(true);
   const [showFavoriteCategories, setShowFavoriteCategories] = useState(true);
-  const [showRecent, setShowRecent] = useState(true);
-  const [showMostUsed, setShowMostUsed] = useState(true);
+  const [showRecent, setShowRecent] = useState(false);
+  const [showMostUsed, setShowMostUsed] = useState(false);
+  const [showSuggested, setShowSuggested] = useState(true);
 
+  // Auto-seed prediction data when modal opens if empty
+  useEffect(() => {
+    if (isOpen) {
+      autoSeedIfEmpty();
+    }
+  }, [isOpen, autoSeedIfEmpty]);
 
   // Collect all unique tags from procedures
   const allTags = useMemo(() => {
@@ -100,6 +113,14 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
     });
     return Array.from(tagSet).sort();
   }, [procedures]);
+
+  // Get AI-powered suggestions based on session procedures
+  const sessionSuggestions = useMemo(() => {
+    if (!suggestionSettings.enabled || sessionProcedureIds.length === 0) {
+      return [];
+    }
+    return getSuggestionsForSession(sessionProcedureIds);
+  }, [suggestionSettings.enabled, sessionProcedureIds, getSuggestionsForSession]);
 
   // Helper to determine token type from a value
   const getTokenType = (value: string): TokenType => {
@@ -1033,13 +1054,74 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
           </div>
         )}
 
-        {/* Divider if we have any favorites, recents, or most-used sections */}
+        {/* Suggested Procedures Section (AI-powered) */}
+        {searchTokens.length === 0 && !inputValue.trim() && sessionSuggestions.length > 0 && (
+          <div className="mb-2">
+            <button
+              onClick={() => setShowSuggested(!showSuggested)}
+              className="w-full text-left font-semibold text-indigo-400 flex items-center gap-2 sticky top-0 bg-slate-800 py-1 z-0 hover:text-indigo-300 transition-colors"
+            >
+              <ChevronIcon 
+                className="w-4 h-4"
+                direction={showSuggested ? 'down' : 'right'}
+              />
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+              </svg>
+              Suggested
+              <span className="text-sm font-normal text-indigo-500">({sessionSuggestions.length})</span>
+              <span className="text-xs font-normal text-indigo-600/70 ml-1" title="Based on procedures commonly used together">
+                AI
+              </span>
+            </button>
+            {showSuggested && (
+              <ul className="space-y-0 pl-2 border-l border-indigo-700/50 mt-1">
+                {sessionSuggestions.map((suggestion, index) => (
+                  <li key={`suggested-${suggestion.procedure.controlName}-${index}`} className="flex items-center group">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(suggestion.procedure.controlName); }}
+                      className={`p-1 mr-1 transition-all ${
+                        isFavorite(suggestion.procedure.controlName) 
+                          ? 'text-amber-400 hover:text-amber-300' 
+                          : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
+                      }`}
+                      aria-label={isFavorite(suggestion.procedure.controlName) ? "Remove from favorites" : "Add to favorites"}
+                    >
+                      <StarIcon className="h-4 w-4" filled={isFavorite(suggestion.procedure.controlName)} />
+                    </button>
+                    <button
+                      onClick={() => handleProcedureClick(suggestion.procedure)}
+                      className="flex-grow text-left py-1 px-1.5 rounded hover:bg-indigo-500/10 transition-colors duration-200"
+                    >
+                      <span className="text-slate-300">{suggestion.procedure.description}</span>
+                      <span 
+                        className="ml-2 text-xs text-indigo-400" 
+                        title={suggestion.contributingProcedures && suggestion.contributingProcedures > 1
+                          ? `${suggestion.confidence}% combined confidence from ${suggestion.contributingProcedures} procedures in your session`
+                          : `${suggestion.confidence}% confidence based on co-occurrence`
+                        }
+                      >
+                        ({suggestion.confidence}%{suggestion.contributingProcedures && suggestion.contributingProcedures > 1 ? ` ×${suggestion.contributingProcedures}` : ''})
+                      </span>
+                      <span className="ml-1 text-xs text-slate-500">
+                        {getCategoryName(suggestion.procedure.categoryId)} › {getSubcategoryName(suggestion.procedure.subcategoryId)}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {/* Divider if we have any favorites, recents, most-used, or suggested sections */}
         {searchTokens.length === 0 && !inputValue.trim() && (
           getFavoriteProcedures().length > 0 || 
           getFavoriteCategories().length > 0 || 
           getFavoriteSubcategories().length > 0 || 
           getRecentProcedures().length > 0 ||
-          getMostUsedProcedures().length > 0
+          getMostUsedProcedures().length > 0 ||
+          sessionSuggestions.length > 0
         ) && sortedCategoryIds.length > 0 && (
           <div className="border-t border-slate-700 my-2 pt-1">
             <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">All Procedures</p>
