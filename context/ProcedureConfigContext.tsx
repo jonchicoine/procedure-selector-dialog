@@ -31,7 +31,9 @@ const SUGGESTION_SETTINGS_KEY = 'procedure-suggestion-settings';
 const SEED_VERSION_KEY = 'procedure-seed-version';
 
 // Bump this version to force re-seeding for all users (useful for demos)
-const SEED_DATA_VERSION = '2.0';
+// v2.0 - Initial AI seed data
+// v2.1 - Force reseed to pick up full AI predictions
+const SEED_DATA_VERSION = '2.1';
 
 // Debounce delay for saving prediction data (ms)
 const PREDICTION_SAVE_DEBOUNCE = 500;
@@ -953,27 +955,30 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
 
   // Auto-seed prediction data if empty OR if seed version has changed (for demos)
   const autoSeedIfEmpty = useCallback(() => {
-    // Check if auto-seeding is enabled
-    if (!suggestionSettings.autoSeed) {
-      return false;
-    }
-    
-    // Check if we need to re-seed due to version change
+    // Check if we need to re-seed due to version change (always check, even if autoSeed is off)
     const storedVersion = localStorage.getItem(SEED_VERSION_KEY);
     const needsReseed = storedVersion !== SEED_DATA_VERSION;
     
     const stats = getPredictionStats(predictionData);
-    console.log('autoSeedIfEmpty called, totalPairs:', stats.totalPairs, 'totalProcedures:', stats.totalProcedures, 'storedVersion:', storedVersion, 'currentVersion:', SEED_DATA_VERSION);
+    console.log('[Seed] autoSeedIfEmpty called:', {
+      totalPairs: stats.totalPairs,
+      totalProcedures: stats.totalProcedures,
+      storedVersion,
+      currentVersion: SEED_DATA_VERSION,
+      needsReseed,
+      autoSeedEnabled: suggestionSettings.autoSeed
+    });
     
-    if (stats.totalPairs === 0 || needsReseed) {
-      // No prediction data OR outdated seed version - re-seed with fresh data
+    // Force reseed if version changed (migration), otherwise respect autoSeed setting
+    if (needsReseed || (suggestionSettings.autoSeed && stats.totalPairs === 0)) {
+      // Outdated seed version (forced upgrade) OR no data and autoSeed enabled
       if (needsReseed) {
-        console.log('Seed data version changed from', storedVersion, 'to', SEED_DATA_VERSION, '- reseeding...');
+        console.log('[Seed] Version upgrade required:', storedVersion, '->', SEED_DATA_VERSION);
       }
-      console.log('Seeding with', suggestionSettings.facilityTypes, 'bundles...');
+      console.log('[Seed] Generating seed data for facility types:', suggestionSettings.facilityTypes);
       const seedData = generateSeedPredictions(config.procedures, suggestionSettings.facilityTypes);
       const seedStats = getPredictionStats(seedData);
-      console.log('Seed data generated - totalPairs:', seedStats.totalPairs, 'totalProcedures:', seedStats.totalProcedures);
+      console.log('[Seed] Generated:', seedStats.totalPairs, 'pairs,', seedStats.totalProcedures, 'procedures');
       setPredictionData(seedData);
       savePredictionData(seedData);
       // Store the seed version so we don't re-seed again until next version bump
