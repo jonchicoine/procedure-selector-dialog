@@ -28,6 +28,10 @@ const USAGE_COUNTS_KEY = 'procedure-usage-counts';
 const MAX_MOST_USED = 20;
 const PREDICTION_DATA_KEY = 'procedure-prediction-data';
 const SUGGESTION_SETTINGS_KEY = 'procedure-suggestion-settings';
+const SEED_VERSION_KEY = 'procedure-seed-version';
+
+// Bump this version to force re-seeding for all users (useful for demos)
+const SEED_DATA_VERSION = '2.0';
 
 // Debounce delay for saving prediction data (ms)
 const PREDICTION_SAVE_DEBOUNCE = 500;
@@ -947,26 +951,36 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
     return getPredictionStats(predictionData);
   }, [predictionData]);
 
-  // Auto-seed prediction data if empty (called when opening procedure selection)
+  // Auto-seed prediction data if empty OR if seed version has changed (for demos)
   const autoSeedIfEmpty = useCallback(() => {
     // Check if auto-seeding is enabled
     if (!suggestionSettings.autoSeed) {
       return false;
     }
     
+    // Check if we need to re-seed due to version change
+    const storedVersion = localStorage.getItem(SEED_VERSION_KEY);
+    const needsReseed = storedVersion !== SEED_DATA_VERSION;
+    
     const stats = getPredictionStats(predictionData);
-    console.log('autoSeedIfEmpty called, totalPairs:', stats.totalPairs, 'totalProcedures:', stats.totalProcedures, 'procedures count:', config.procedures.length);
-    if (stats.totalPairs === 0) {
-      // No prediction data - auto-seed with the configured facility types
+    console.log('autoSeedIfEmpty called, totalPairs:', stats.totalPairs, 'totalProcedures:', stats.totalProcedures, 'storedVersion:', storedVersion, 'currentVersion:', SEED_DATA_VERSION);
+    
+    if (stats.totalPairs === 0 || needsReseed) {
+      // No prediction data OR outdated seed version - re-seed with fresh data
+      if (needsReseed) {
+        console.log('Seed data version changed from', storedVersion, 'to', SEED_DATA_VERSION, '- reseeding...');
+      }
       console.log('Seeding with', suggestionSettings.facilityTypes, 'bundles...');
       const seedData = generateSeedPredictions(config.procedures, suggestionSettings.facilityTypes);
       const seedStats = getPredictionStats(seedData);
       console.log('Seed data generated - totalPairs:', seedStats.totalPairs, 'totalProcedures:', seedStats.totalProcedures);
       setPredictionData(seedData);
       savePredictionData(seedData);
+      // Store the seed version so we don't re-seed again until next version bump
+      localStorage.setItem(SEED_VERSION_KEY, SEED_DATA_VERSION);
       return true; // Indicates seeding was performed
     }
-    return false; // Already had data
+    return false; // Already had current data
   }, [predictionData, config.procedures, suggestionSettings.autoSeed, suggestionSettings.facilityTypes]);
 
   return (

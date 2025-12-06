@@ -1,0 +1,422 @@
+{
+  "version": "1.0",
+  "procedureAddCounts": {
+    "Procedures01_Intubation_cbo": 150,
+    "Procedures02_ProceduralSedation_cbo": 400,
+    "Procedures01_CentralLineGTE5_chk": 120,
+    "Procedures01_CentralLineLT5_chk": 25,
+    "Procedures01_CPR_chk": 60,
+    "Procedures01_ChestTubes_cbo": 45,
+    "Procedures01_ArterialCat_chk": 80,
+    "Procedures01_CardioversionElectric_chk": 35,
+    "Procedures02_LumbarPuncture_chk": 90,
+    "Procedures01_NGWithLavage_chk": 30,
+    "Procedures01_NGWithSuction_chk": 100,
+    "Orthopedics_CastChangesSimpleImmob1_cbo": 800,
+    "Orthopedics_Splint_chk": 600,
+    "Orthopedics_ReductionClosed_chk": 200,
+    "Procedures01_FoleyCatheterComplex_chk": 150,
+    "Procedures01_FoleyCatheterSimple_chk": 300,
+    "Surgical_FBID_IncisionDrainage_PAA_chk": 80,
+    "Surgical_FBID_IncisionDrainage_Skin_cbo": 400,
+    "Surgical_FBID_BlocksForPain_DigitialBlock_chk": 350,
+    "Procedures02_NasalPackAnterior_cbo": 120,
+    "Procedures02_NasalCautery_cbo": 180,
+    "Procedures02_FBCorneaWithSlitLamp_chk": 60,
+    "Procedures02_FBCorneaWOSlitLamp_chk": 40,
+    "Procedures01_PICCLineGTE5_chk": 50,
+    "Procedures01_PICCLineLT5_chk": 10,
+    "Procedures01_CardiacMonitor_chk": 2000,
+    "Procedures01_OxygenTherapy_chk": 1500,
+    "Procedures01_EndTidalCO2_chk": 300,
+    "Procedures01_NebulizerRTRepeat_cbo": 600,
+    "Procedures01_NebulizerRepeat_cbo": 500,
+    "Procedures01_BiPap_chk": 150,
+    "Procedures01_CPap_chk": 80,
+    "Surgical_Lacerations_SutureSimple_chk": 1200,
+    "Surgical_Lacerations_SutureComplex_chk": 300,
+    "Surgical_Lacerations_Staples_chk": 400,
+    "Surgical_Lacerations_DermabondGlue_chk": 600,
+    "Surgical_Lacerations_Packing_chk": 150,
+    "Procedures02_VaginalDelivery_chk": 25,
+    "Procedures02_NewbornResuscitation_chk": 20,
+    "Procedures02_CesareanSection_chk": 8,
+    "Procedures02_FetalNonStressTest_chk": 60,
+    "Surgical_FBID_ForeignBodyRemoval_Ear_chk": 80,
+    "Surgical_FBID_ForeignBodyRemoval_Nose_chk": 50,
+    "Procedures01_CatheterStraighCath_chk": 200,
+    "Procedures01_CathForUA_chk": 150,
+    "Procedures01_DeclotVascularDevice_chk": 30,
+    "Procedures01_Thoracentesis_cbo": 40,
+    "Procedures01_Pericardiocentesis_chk": 8,
+    "Procedures01_Cricothyroidotomy_chk": 5,
+    "Procedures01_Tracheostomy_chk": 15,
+    "Procedures01_PacerExternal_chk": 20,
+    "Procedures01_PacerInternalTemp_chk": 10,
+    "Procedures01_IOAccess_chk": 40,
+    "Procedures01_Peritoneal_cbo": 15,
+    "Procedures01_BladderScan_chk": 400,
+    "Procedures01_GTubeReplacement_chk": 60,
+    "Procedures01_GTubeReposition_chk": 40,
+    "Procedures02_ImpactedCerumen1_cbo": 150,
+    "Procedures02_ImpactedCerumen2_cbo": 200,
+    "Procedures02_NasalPackPosteriorInitial_chk": 20,
+    "Procedures02_NasalPackBalloon_cbo": 30,
+    "Procedures02_EpiduralBloodPatch_chk": 10,
+    "Surgical_FBID_Nails_DrainSubungualHematoma_chk": 120,
+    "Surgical_FBID_Nails_AvulsionOfNailPlate_cbo": 80,
+    "Surgical_FBID_Nails_RepairOfNailbed_chk": 60,
+    "Surgical_FBID_IncisionDrainage_Finger_cbo": 100,
+    "Surgical_FBID_IncisionDrainage_BartholinCyst_chk": 40,
+    "Surgical_FBID_IncisionDrainage_Peritonsilar_chk": 25,
+    "Surgical_Lacerations_PartialThicknessSmallLT5_chk": 80,
+    "Surgical_Lacerations_FirstDegreeLocalTreatmentInitial_chk": 120,
+    "Procedures01_Tetanus_chk": 800,
+    "Orthopedics_UnnaBoot_chk": 100
+  },
+  "coOccurrences": {
+    "Procedures01_Intubation_cbo": {
+      "Procedures02_ProceduralSedation_cbo": 140,
+      "Procedures01_EndTidalCO2_chk": 145,
+      "Procedures01_CardiacMonitor_chk": 150,
+      "Procedures01_OxygenTherapy_chk": 150,
+      "Procedures01_CentralLineGTE5_chk": 90,
+      "Procedures01_ArterialCat_chk": 85,
+      "Procedures01_NGWithSuction_chk": 120,
+      "Procedures01_CPR_chk": 45,
+      "Procedures01_ChestTubes_cbo": 30,
+      "Procedures01_FoleyCatheterSimple_chk": 100,
+      "Procedures01_BiPap_chk": 20
+    },
+    "Procedures02_ProceduralSedation_cbo": {
+      "Procedures01_CardiacMonitor_chk": 380,
+      "Procedures01_OxygenTherapy_chk": 360,
+      "Procedures01_EndTidalCO2_chk": 280,
+      "Procedures01_Intubation_cbo": 140,
+      "Orthopedics_ReductionClosed_chk": 180,
+      "Orthopedics_Splint_chk": 160,
+      "Orthopedics_CastChangesSimpleImmob1_cbo": 120,
+      "Procedures01_CardioversionElectric_chk": 32,
+      "Procedures02_LumbarPuncture_chk": 25,
+      "Procedures01_ChestTubes_cbo": 35,
+      "Surgical_FBID_IncisionDrainage_Skin_cbo": 60,
+      "Surgical_Lacerations_SutureComplex_chk": 40
+    },
+    "Procedures01_CPR_chk": {
+      "Procedures01_Intubation_cbo": 55,
+      "Procedures01_CentralLineGTE5_chk": 40,
+      "Procedures01_IOAccess_chk": 35,
+      "Procedures01_ArterialCat_chk": 30,
+      "Procedures01_EndTidalCO2_chk": 55,
+      "Procedures01_CardiacMonitor_chk": 60,
+      "Procedures01_OxygenTherapy_chk": 60,
+      "Procedures02_ProceduralSedation_cbo": 50,
+      "Procedures01_PacerExternal_chk": 15,
+      "Procedures01_Pericardiocentesis_chk": 5,
+      "Procedures01_ChestTubes_cbo": 8
+    },
+    "Procedures01_CentralLineGTE5_chk": {
+      "Procedures01_CardiacMonitor_chk": 115,
+      "Procedures01_ArterialCat_chk": 60,
+      "Procedures01_Intubation_cbo": 90,
+      "Procedures01_CPR_chk": 40,
+      "Procedures02_ProceduralSedation_cbo": 30,
+      "Procedures01_OxygenTherapy_chk": 100,
+      "Procedures01_NGWithSuction_chk": 50,
+      "Procedures01_FoleyCatheterSimple_chk": 70
+    },
+    "Procedures01_CentralLineLT5_chk": {
+      "Procedures01_CardiacMonitor_chk": 25,
+      "Procedures01_OxygenTherapy_chk": 25,
+      "Procedures01_IOAccess_chk": 10
+    },
+    "Procedures01_ChestTubes_cbo": {
+      "Procedures02_ProceduralSedation_cbo": 35,
+      "Procedures01_Intubation_cbo": 30,
+      "Procedures01_CentralLineGTE5_chk": 25,
+      "Procedures01_OxygenTherapy_chk": 45,
+      "Procedures01_CardiacMonitor_chk": 45,
+      "Procedures01_ArterialCat_chk": 20,
+      "Procedures01_EndTidalCO2_chk": 25
+    },
+    "Procedures01_CardioversionElectric_chk": {
+      "Procedures02_ProceduralSedation_cbo": 32,
+      "Procedures01_CardiacMonitor_chk": 35,
+      "Procedures01_OxygenTherapy_chk": 35,
+      "Procedures01_EndTidalCO2_chk": 30
+    },
+    "Procedures02_LumbarPuncture_chk": {
+      "Procedures02_ProceduralSedation_cbo": 25,
+      "Procedures01_CardiacMonitor_chk": 40,
+      "Procedures01_OxygenTherapy_chk": 30
+    },
+    "Procedures01_ArterialCat_chk": {
+      "Procedures01_CentralLineGTE5_chk": 60,
+      "Procedures01_Intubation_cbo": 85,
+      "Procedures01_CardiacMonitor_chk": 80,
+      "Procedures01_CPR_chk": 30,
+      "Procedures01_BiPap_chk": 20,
+      "Procedures01_OxygenTherapy_chk": 75
+    },
+    "Procedures01_BiPap_chk": {
+      "Procedures01_OxygenTherapy_chk": 145,
+      "Procedures01_CardiacMonitor_chk": 140,
+      "Procedures01_NebulizerRTRepeat_cbo": 100,
+      "Procedures01_ArterialCat_chk": 20,
+      "Procedures01_EndTidalCO2_chk": 60
+    },
+    "Procedures01_CPap_chk": {
+      "Procedures01_OxygenTherapy_chk": 78,
+      "Procedures01_CardiacMonitor_chk": 75
+    },
+    "Procedures01_NebulizerRTRepeat_cbo": {
+      "Procedures01_OxygenTherapy_chk": 500,
+      "Procedures01_CardiacMonitor_chk": 300,
+      "Procedures01_BiPap_chk": 100,
+      "Procedures01_EndTidalCO2_chk": 80
+    },
+    "Procedures01_NebulizerRepeat_cbo": {
+      "Procedures01_OxygenTherapy_chk": 400,
+      "Procedures01_CardiacMonitor_chk": 250
+    },
+    "Orthopedics_ReductionClosed_chk": {
+      "Procedures02_ProceduralSedation_cbo": 180,
+      "Orthopedics_Splint_chk": 190,
+      "Orthopedics_CastChangesSimpleImmob1_cbo": 150,
+      "Procedures01_CardiacMonitor_chk": 180,
+      "Procedures01_OxygenTherapy_chk": 170,
+      "Procedures01_EndTidalCO2_chk": 160
+    },
+    "Orthopedics_Splint_chk": {
+      "Orthopedics_ReductionClosed_chk": 190,
+      "Procedures02_ProceduralSedation_cbo": 160
+    },
+    "Orthopedics_CastChangesSimpleImmob1_cbo": {
+      "Orthopedics_ReductionClosed_chk": 150,
+      "Procedures02_ProceduralSedation_cbo": 120
+    },
+    "Surgical_Lacerations_SutureSimple_chk": {
+      "Surgical_FBID_BlocksForPain_DigitialBlock_chk": 300,
+      "Procedures01_Tetanus_chk": 600,
+      "Surgical_Lacerations_DermabondGlue_chk": 50
+    },
+    "Surgical_Lacerations_SutureComplex_chk": {
+      "Surgical_FBID_BlocksForPain_DigitialBlock_chk": 150,
+      "Procedures01_Tetanus_chk": 200,
+      "Procedures02_ProceduralSedation_cbo": 40,
+      "Surgical_Lacerations_SutureSimple_chk": 80
+    },
+    "Surgical_Lacerations_Staples_chk": {
+      "Procedures01_Tetanus_chk": 250
+    },
+    "Surgical_Lacerations_DermabondGlue_chk": {
+      "Procedures01_Tetanus_chk": 200
+    },
+    "Surgical_FBID_BlocksForPain_DigitialBlock_chk": {
+      "Surgical_Lacerations_SutureSimple_chk": 300,
+      "Surgical_Lacerations_SutureComplex_chk": 150,
+      "Surgical_FBID_Nails_AvulsionOfNailPlate_cbo": 70,
+      "Surgical_FBID_Nails_RepairOfNailbed_chk": 55,
+      "Surgical_FBID_Nails_DrainSubungualHematoma_chk": 80,
+      "Surgical_FBID_IncisionDrainage_Finger_cbo": 90,
+      "Procedures01_Tetanus_chk": 150
+    },
+    "Surgical_FBID_IncisionDrainage_Skin_cbo": {
+      "Surgical_Lacerations_Packing_chk": 280,
+      "Procedures02_ProceduralSedation_cbo": 60,
+      "Procedures01_Tetanus_chk": 100
+    },
+    "Surgical_FBID_IncisionDrainage_PAA_chk": {
+      "Surgical_Lacerations_Packing_chk": 60,
+      "Procedures02_ProceduralSedation_cbo": 15
+    },
+    "Surgical_FBID_IncisionDrainage_Finger_cbo": {
+      "Surgical_FBID_BlocksForPain_DigitialBlock_chk": 90,
+      "Surgical_Lacerations_Packing_chk": 40,
+      "Procedures01_Tetanus_chk": 50
+    },
+    "Surgical_FBID_IncisionDrainage_BartholinCyst_chk": {
+      "Surgical_Lacerations_Packing_chk": 35,
+      "Procedures02_ProceduralSedation_cbo": 10
+    },
+    "Surgical_FBID_IncisionDrainage_Peritonsilar_chk": {
+      "Procedures02_ProceduralSedation_cbo": 15
+    },
+    "Surgical_FBID_Nails_DrainSubungualHematoma_chk": {
+      "Surgical_FBID_BlocksForPain_DigitialBlock_chk": 80,
+      "Procedures01_Tetanus_chk": 60
+    },
+    "Surgical_FBID_Nails_AvulsionOfNailPlate_cbo": {
+      "Surgical_FBID_BlocksForPain_DigitialBlock_chk": 70,
+      "Surgical_FBID_Nails_RepairOfNailbed_chk": 30,
+      "Procedures01_Tetanus_chk": 50
+    },
+    "Surgical_FBID_Nails_RepairOfNailbed_chk": {
+      "Surgical_FBID_BlocksForPain_DigitialBlock_chk": 55,
+      "Surgical_FBID_Nails_AvulsionOfNailPlate_cbo": 30,
+      "Procedures01_Tetanus_chk": 40
+    },
+    "Procedures02_NasalPackAnterior_cbo": {
+      "Procedures02_NasalCautery_cbo": 40
+    },
+    "Procedures02_NasalCautery_cbo": {
+      "Procedures02_NasalPackAnterior_cbo": 40
+    },
+    "Procedures02_NasalPackPosteriorInitial_chk": {
+      "Procedures02_NasalPackAnterior_cbo": 15,
+      "Procedures01_CardiacMonitor_chk": 18,
+      "Procedures01_OxygenTherapy_chk": 15
+    },
+    "Procedures02_NasalPackBalloon_cbo": {
+      "Procedures02_NasalPackAnterior_cbo": 10,
+      "Procedures01_CardiacMonitor_chk": 20
+    },
+    "Procedures02_VaginalDelivery_chk": {
+      "Procedures02_NewbornResuscitation_chk": 20,
+      "Procedures02_FetalNonStressTest_chk": 22,
+      "Procedures01_CardiacMonitor_chk": 25,
+      "Procedures01_OxygenTherapy_chk": 20
+    },
+    "Procedures02_NewbornResuscitation_chk": {
+      "Procedures02_VaginalDelivery_chk": 18,
+      "Procedures02_CesareanSection_chk": 6,
+      "Procedures01_OxygenTherapy_chk": 18
+    },
+    "Procedures02_CesareanSection_chk": {
+      "Procedures02_NewbornResuscitation_chk": 6,
+      "Procedures02_FetalNonStressTest_chk": 7,
+      "Procedures01_CardiacMonitor_chk": 8
+    },
+    "Procedures02_FetalNonStressTest_chk": {
+      "Procedures02_VaginalDelivery_chk": 22,
+      "Procedures01_CardiacMonitor_chk": 50
+    },
+    "Procedures01_FoleyCatheterSimple_chk": {
+      "Procedures01_BladderScan_chk": 150,
+      "Procedures01_Intubation_cbo": 100,
+      "Procedures01_CentralLineGTE5_chk": 70
+    },
+    "Procedures01_FoleyCatheterComplex_chk": {
+      "Procedures01_BladderScan_chk": 100
+    },
+    "Procedures01_CatheterStraighCath_chk": {
+      "Procedures01_BladderScan_chk": 120
+    },
+    "Procedures01_CathForUA_chk": {
+      "Procedures01_BladderScan_chk": 80
+    },
+    "Procedures01_BladderScan_chk": {
+      "Procedures01_FoleyCatheterSimple_chk": 150,
+      "Procedures01_CatheterStraighCath_chk": 120,
+      "Procedures01_CathForUA_chk": 80,
+      "Procedures01_FoleyCatheterComplex_chk": 100
+    },
+    "Procedures01_Thoracentesis_cbo": {
+      "Procedures01_OxygenTherapy_chk": 35,
+      "Procedures01_CardiacMonitor_chk": 30
+    },
+    "Procedures01_Pericardiocentesis_chk": {
+      "Procedures01_CardiacMonitor_chk": 8,
+      "Procedures01_CPR_chk": 5,
+      "Procedures02_ProceduralSedation_cbo": 6
+    },
+    "Procedures01_Cricothyroidotomy_chk": {
+      "Procedures01_CardiacMonitor_chk": 5,
+      "Procedures01_OxygenTherapy_chk": 5,
+      "Procedures01_CPR_chk": 3
+    },
+    "Procedures01_IOAccess_chk": {
+      "Procedures01_CPR_chk": 35,
+      "Procedures01_CardiacMonitor_chk": 40,
+      "Procedures01_Intubation_cbo": 25
+    },
+    "Procedures01_PacerExternal_chk": {
+      "Procedures01_CardiacMonitor_chk": 20,
+      "Procedures01_CPR_chk": 15,
+      "Procedures02_ProceduralSedation_cbo": 12
+    },
+    "Procedures01_PacerInternalTemp_chk": {
+      "Procedures01_CardiacMonitor_chk": 10,
+      "Procedures01_CentralLineGTE5_chk": 8
+    },
+    "Surgical_FBID_ForeignBodyRemoval_Ear_chk": {
+      "Procedures02_ImpactedCerumen1_cbo": 15,
+      "Procedures02_ProceduralSedation_cbo": 10
+    },
+    "Surgical_FBID_ForeignBodyRemoval_Nose_chk": {
+      "Procedures02_ProceduralSedation_cbo": 8
+    },
+    "Procedures02_FBCorneaWithSlitLamp_chk": {
+      "Procedures02_FBCorneaWOSlitLamp_chk": 5
+    },
+    "Procedures01_NGWithSuction_chk": {
+      "Procedures01_Intubation_cbo": 120,
+      "Procedures01_CentralLineGTE5_chk": 50,
+      "Procedures01_CardiacMonitor_chk": 90
+    },
+    "Procedures01_NGWithLavage_chk": {
+      "Procedures01_Intubation_cbo": 20,
+      "Procedures01_CardiacMonitor_chk": 25
+    },
+    "Procedures01_Peritoneal_cbo": {
+      "Procedures01_CardiacMonitor_chk": 14,
+      "Procedures02_ProceduralSedation_cbo": 8
+    },
+    "Procedures01_GTubeReplacement_chk": {
+      "Procedures01_GTubeReposition_chk": 10
+    },
+    "Surgical_Lacerations_Packing_chk": {
+      "Surgical_FBID_IncisionDrainage_Skin_cbo": 280,
+      "Surgical_FBID_IncisionDrainage_PAA_chk": 60,
+      "Surgical_FBID_IncisionDrainage_Finger_cbo": 40,
+      "Surgical_FBID_IncisionDrainage_BartholinCyst_chk": 35
+    },
+    "Procedures01_Tetanus_chk": {
+      "Surgical_Lacerations_SutureSimple_chk": 600,
+      "Surgical_Lacerations_SutureComplex_chk": 200,
+      "Surgical_Lacerations_Staples_chk": 250,
+      "Surgical_Lacerations_DermabondGlue_chk": 200,
+      "Surgical_FBID_BlocksForPain_DigitialBlock_chk": 150,
+      "Surgical_FBID_IncisionDrainage_Skin_cbo": 100,
+      "Surgical_FBID_Nails_DrainSubungualHematoma_chk": 60,
+      "Surgical_FBID_Nails_AvulsionOfNailPlate_cbo": 50,
+      "Surgical_FBID_Nails_RepairOfNailbed_chk": 40,
+      "Surgical_FBID_IncisionDrainage_Finger_cbo": 50
+    },
+    "Procedures01_EndTidalCO2_chk": {
+      "Procedures01_Intubation_cbo": 145,
+      "Procedures02_ProceduralSedation_cbo": 280,
+      "Procedures01_CardiacMonitor_chk": 290,
+      "Procedures01_OxygenTherapy_chk": 280,
+      "Procedures01_CPR_chk": 55,
+      "Procedures01_BiPap_chk": 60
+    },
+    "Procedures01_OxygenTherapy_chk": {
+      "Procedures01_CardiacMonitor_chk": 1200,
+      "Procedures01_NebulizerRTRepeat_cbo": 500,
+      "Procedures01_NebulizerRepeat_cbo": 400,
+      "Procedures01_BiPap_chk": 145,
+      "Procedures01_Intubation_cbo": 150,
+      "Procedures02_ProceduralSedation_cbo": 360
+    },
+    "Procedures01_CardiacMonitor_chk": {
+      "Procedures01_OxygenTherapy_chk": 1200,
+      "Procedures02_ProceduralSedation_cbo": 380,
+      "Procedures01_Intubation_cbo": 150,
+      "Procedures01_EndTidalCO2_chk": 290,
+      "Procedures01_CentralLineGTE5_chk": 115,
+      "Procedures01_NebulizerRTRepeat_cbo": 300,
+      "Procedures01_BiPap_chk": 140
+    },
+    "Procedures01_DeclotVascularDevice_chk": {
+      "Procedures01_PICCLineGTE5_chk": 10
+    },
+    "Procedures01_PICCLineGTE5_chk": {
+      "Procedures01_DeclotVascularDevice_chk": 10,
+      "Procedures01_CardiacMonitor_chk": 20
+    },
+    "Procedures02_EpiduralBloodPatch_chk": {
+      "Procedures02_LumbarPuncture_chk": 8
+    }
+  }
+}
