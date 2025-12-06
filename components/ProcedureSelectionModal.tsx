@@ -1163,17 +1163,37 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                     >
                       <StarIcon className="h-4 w-4" filled={isFavorite(proc.controlName)} />
                     </button>
-                    <button
-                      onClick={() => handleProcedureClick(proc)}
-                      className="flex-grow text-left py-1.5 px-2 rounded flex items-center gap-2 min-w-0"
-                    >
-                      <span className="bg-cyan-700/50 text-cyan-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
+                    <div className="flex-grow flex items-center gap-2 min-w-0 py-1.5 px-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleSubcategoryFavorite(proc.subcategoryId); }}
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-0.5 transition-all ${
+                          isSubcategoryFavorite(proc.subcategoryId)
+                            ? 'bg-cyan-600/70 text-cyan-100 ring-1 ring-amber-400/50'
+                            : 'bg-cyan-700/50 text-cyan-200 hover:bg-cyan-600/60'
+                        }`}
+                        title={isSubcategoryFavorite(proc.subcategoryId) ? "Remove subcategory from favorites" : "Click to favorite this subcategory"}
+                      >
+                        {isSubcategoryFavorite(proc.subcategoryId) && <StarIcon className="h-2.5 w-2.5 text-amber-400" filled />}
                         {getSubcategoryName(proc.subcategoryId)}
-                      </span>
-                      <span className="text-slate-300 truncate flex-grow">{proc.description}</span>
-                      <span className="bg-purple-700/50 text-purple-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
+                      </button>
+                      <button
+                        onClick={() => handleProcedureClick(proc)}
+                        className="text-slate-300 truncate flex-grow text-left hover:text-white transition-colors"
+                      >
+                        {proc.description}
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleCategoryFavorite(proc.categoryId); }}
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-0.5 transition-all ${
+                          isCategoryFavorite(proc.categoryId)
+                            ? 'bg-purple-600/70 text-purple-100 ring-1 ring-amber-400/50'
+                            : 'bg-purple-700/50 text-purple-200 hover:bg-purple-600/60'
+                        }`}
+                        title={isCategoryFavorite(proc.categoryId) ? "Remove category from favorites" : "Click to favorite this category"}
+                      >
+                        {isCategoryFavorite(proc.categoryId) && <StarIcon className="h-2.5 w-2.5 text-amber-400" filled />}
                         {getCategoryName(proc.categoryId)}
-                      </span>
+                      </button>
                       {tooltip && (
                         <span 
                           className="text-slate-500 flex-shrink-0 hover:text-slate-300 cursor-help" 
@@ -1198,7 +1218,7 @@ export const ProcedureSelectionModal: React.FC<ProcedureSelectionModalProps> = (
                           </svg>
                         </span>
                       )}
-                    </button>
+                    </div>
                   </div>
                 );
               })}

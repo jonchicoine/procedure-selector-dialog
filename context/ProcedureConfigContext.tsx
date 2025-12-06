@@ -663,7 +663,7 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
 
   const toggleFavorite = useCallback((controlName: string) => {
     setFavorites(prev => {
-      const next = new Set(prev);
+      const next = new Set<string>(prev);
       if (next.has(controlName)) {
         next.delete(controlName);
       } else {
@@ -685,7 +685,7 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
 
   const toggleCategoryFavorite = useCallback((categoryId: string) => {
     setCategoryFavorites(prev => {
-      const next = new Set(prev);
+      const next = new Set<string>(prev);
       if (next.has(categoryId)) {
         next.delete(categoryId);
       } else {
@@ -709,7 +709,7 @@ export function ProcedureConfigProvider({ children }: ProcedureConfigProviderPro
 
   const toggleSubcategoryFavorite = useCallback((subcategoryId: string) => {
     setSubcategoryFavorites(prev => {
-      const next = new Set(prev);
+      const next = new Set<string>(prev);
       if (next.has(subcategoryId)) {
         next.delete(subcategoryId);
       } else {
